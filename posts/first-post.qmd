@@ -8,5 +8,3 @@ categories:
   - labreport
 draft: false
 ---
-
-My first blog. Yayyyyy!!!!
