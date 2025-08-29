@@ -1,0 +1,15 @@
+---
+title: "E155 Portfolio"
+image: images/headshot.jpg
+about: 
+    template: jolla
+    links: 
+      - icon: linkedin
+        text: LinkedIn
+        href: https://www.linkedin.com/in/jngoga
+      - icon: github
+        text: Github
+        href: https://github.com/Rex-Josaphat
+---
+
+Hi! I’m Josaphat Ngoga, a senior Engineering major at Harvey Mudd College. My interests span both Mechanical and Electrical engineering, with a focus on mechanical design, electronics, and hardware systems. I enjoy working on projects that bring these areas together—especially those involving FPGA development and microcontroller-based applications. You can find more about my interests, skills, and projects at [jngoga.vercel.app](https://jngoga.vercel.app/)
