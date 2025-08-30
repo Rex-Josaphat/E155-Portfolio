@@ -1,12 +1,17 @@
 ---
-title: "Hello Quarto"
-description: "Welcome to my Quarto portfolio"
+title: "The Modern Brains"
+description: "A journey to The Depths of Machine Psychology"
 author: "Josaphat Ngoga"
 date: "8/29/25"
 categories:
   - reflection
-  - labreport
 draft: false
 ---
 
-Thia is my first blog post. Yayyyyy!!!!!!!!
+This week marked my first entry into microprocessors. Microprocessors are regarded as the brains of modern electronics and are at the center of each and every electronic we encounter in our lives from our daily smarphones to the vehicles we drive to our favorite venues everyday. The journey is exciting! The idea that I now get to be a "psychologist" (not the literal definition) as I work with and on machine brains is fascinating and I can't wait for it. If you're wondering what such a *"Modern Brain"* looks like, take a look at that beauty in the image below:
+
+![src:phoenixnap.com](images/MCU_board.jpg)
+
+As exciting as the journey ahead looks like, it comes with its challenges. Long hours of hardwork and dedication, sleepless nights of debugging and setup adjustments, much of which I have started encountering at the moment with just **4 days** in the class. Either way, I'm enjoying myself and I'm willing to do all it takes to learn, work, and innovate and make the most of the wonderful journey ahead.
+
+*"Impara l'arte e mettila da parte!"* (Learn the art and put it aside)
