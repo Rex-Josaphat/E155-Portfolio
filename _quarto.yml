@@ -9,7 +9,13 @@ website:
         text: Home
       - href: blog.qmd
         text: Blog
-
+      - text: E155 Labs  # Setup Dropdown list for labs
+        menu: 
+          - text: Lab 1
+            href: labs/lab1/lab1.qmd
+      - href: https://hmc-e155.github.io/
+        text: Resources
+      
 format:
   html:
     theme:

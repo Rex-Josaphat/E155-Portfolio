@@ -1,0 +1,7 @@
+---
+title: "E155 Lab 1: FPGA and MCU Setup and Testing"
+draft: false
+---
+# Introduction
+
+In this lab, an FPGA and MCU were installed on a development board setup and tested to verify proper functionality. First, the development board was built by soldering on each individual components following provided BOM, schematic, and silkscreen on the provided PCB. 

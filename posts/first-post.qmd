@@ -1,10 +1,12 @@
 ---
 title: "Hello Quarto"
 description: "Welcome to my Quarto portfolio"
-author: "Josh Brake"
-date: "8/23/24"
+author: "Josaphat Ngoga"
+date: "8/29/25"
 categories:
   - reflection
   - labreport
 draft: false
 ---
+
+Thia is my first blog post. Yayyyyy!!!!!!!!
