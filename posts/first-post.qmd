@@ -14,4 +14,4 @@ This week marked my first entry into microprocessors. Microprocessors are regard
 
 As exciting as the journey ahead looks like, it comes with its challenges. Long hours of hardwork and dedication, sleepless nights of debugging and setup adjustments, much of which I have started encountering at the moment with just **4 days** in the class. Either way, I'm enjoying myself and I'm willing to do all it takes to learn, work, and innovate and make the most of the wonderful journey ahead.
 
-*"Impara l'arte e mettila da parte!"* (Learn the art and put it aside)
+*"Impara l'arte e mettila da parte!"* (Learn the art and put it aside).
