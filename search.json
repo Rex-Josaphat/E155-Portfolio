@@ -1,0 +1,37 @@
+[
+  {
+    "objectID": "posts/first-post.html",
+    "href": "posts/first-post.html",
+    "title": "The Modern Brains",
+    "section": "",
+    "text": "This week marked my first entry into microprocessors. Microprocessors are regarded as the brains of modern electronics and are at the center of each and every electronic we encounter in our lives from our daily smarphones to the vehicles we drive to our favorite venues everyday. The journey is exciting! The idea that I now get to be a “psychologist” (not the literal definition) as I work with and on machine brains is fascinating and I can’t wait for it. If you’re wondering what such a “Modern Brain” looks like, take a look at that beauty in the image below:\n\n\n\nsrc:phoenixnap.com\n\n\nAs exciting as the journey ahead looks like, it comes with its challenges. Long hours of hardwork and dedication, sleepless nights of debugging and setup adjustments, much of which I have started encountering at the moment with just 4 days in the class. Either way, I’m enjoying myself and I’m willing to do all it takes to learn, work, and innovate and make the most of the wonderful journey ahead.\n“Impara l’arte e mettila da parte!” (Learn the art and put it aside)"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "E155 Portfolio",
+    "section": "",
+    "text": "Hi! I’m Josaphat Ngoga, a senior Engineering major at Harvey Mudd College. My interests span both Mechanical and Electrical engineering, with a focus on mechanical design, electronics, and hardware systems. I enjoy working on projects that bring these areas together—especially those involving FPGA development and microcontroller-based applications. You can find more about my interests, skills, and projects at jngoga.vercel.app"
+  },
+  {
+    "objectID": "blog.html",
+    "href": "blog.html",
+    "title": "E155 Blog",
+    "section": "",
+    "text": "The Modern Brains\n\n\nA journey to The Depths of Machine Psychology\n\n\n\n\n\nAug 29, 2025\n\n\nJosaphat Ngoga\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "labs/lab1/lab1.html",
+    "href": "labs/lab1/lab1.html",
+    "title": "E155 Lab 1: FPGA and MCU Setup and Testing",
+    "section": "",
+    "text": "In this lab, an FPGA and MCU were installed on a development board setup and tested to verify proper functionality. First, the development board was built by soldering on each individual components following provided BOM, schematic, and silkscreen on the provided PCB."
+  },
+  {
+    "objectID": "labs/lab1/lab1.html#introduction",
+    "href": "labs/lab1/lab1.html#introduction",
+    "title": "E155 Lab 1: FPGA and MCU Setup and Testing",
+    "section": "",
+    "text": "In this lab, an FPGA and MCU were installed on a development board setup and tested to verify proper functionality. First, the development board was built by soldering on each individual components following provided BOM, schematic, and silkscreen on the provided PCB."
+  }
+]
