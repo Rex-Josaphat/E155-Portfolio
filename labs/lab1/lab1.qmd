@@ -4,4 +4,31 @@ draft: false
 ---
 ## Introduction
 
-In this lab, an FPGA and MCU were installed on a development board setup and tested to verify proper functionality. First, the development board was built by soldering on each individual components following provided BOM, schematic, and silkscreen on the provided PCB. 
+In this lab, an FPGA and MCU were installed on a development board setup and tested to verify proper functionality. First, the development board was built by soldering on each individual components following provided BOM, schematic, and the silkscreen on the provided PCB. 
+
+## Development Board Setup
+
+The primary purpose of this lab was to assemble the development board to be used for the different labs and projects over the semester. The provided board was an empty PCB to be populated by different electrical components within the categories of Through Hole Technology (THT) as Surface Mount Technology (SMT). The electrical components provided were: resistors, capacitors, voltage regulator, DIP switches, push-button switches, jumpers, and LEDs. At the heart of the board there is the Nucleo-L432KC microcontroller unit (MCU) and the UPduino v3.1 FPGA which is the primary component handling the tasks of this lab. 
+
+The soldering process was straightforward except for the SMT components. It was hard to solder the voltage regulators because the underside plate was not sticking to the board fully. Surprisingly it was easy to solder the LEDs and other smaller SMT components probaly because I was just connecting to specific terminals as opposed to the wide plate of the voltage regulators. The complete development board is shown below:
+
+![Figure 1: Fully Assembled Development Board](link)
+
+## Experiment Setup
+
+The main task of the lab was to light up on-board LEDs and a MAN6410 seven-segment display using one of the DIP switch modules on the development board. This was to be done using SystemVerilog modules uploaded to the FPGA module on the board.
+
+### FPGA and MCU Testing 
+
+Before setting up for the actual experiment the FPGA and MCU, the brains of the whole board, were tested to ensure they work and can communicate to the respective components on the board they're internally connected to. Determining if the board was powered on properly was fairly easy since we had a red on-board LED to light up when power is coursing thorugh the board and could also read the input voltages from the regulators using the tabletop multimeters in the lab space. 
+
+Using *Lattice Radiant* to program and upload the code to the FPGA, an onboard LED (D3) was toggled to blink at about 1HZ. Testing the MCU used a similar approach but *Segger Embedded Studio* was used to program the MCU where it blinked three on-board LEDs (D2, D3, and D7). These testing procedures worked out as expected indicating that the FPGA and MCU are integrated to the board correcltly.
+
+### FPGA Experiment Design
+
+The task was to test the board and operate a 7-segment display. To further test the board we had to drive two LEDs responding to the states of the four-DIP switch module. The first LED had to react to the first 2 DIP switches in a manner resembling an exclusive OR (XOR) gate. The second LED had to react to the last pair of DIP switches similar to an AND gate. These LEDs responded to their respective switch pair regardless of the other pair. The third LED to be controlled had to blink at about 2.4 Hz. To do this, a counter logic was implemented to ensure the LED is driven at the correct frequency. The clock for this setup was obtained by leveraging the HSOSC module of the iCE40 Technology Library in Lattice Radiant. This allowed access to the on-board high speed oscillator providing 48MHz. A 24-bit counter was implemented with a counter increment of 2 bringing the oscillation frequency to about *2.8Hz*.
+
+The second task was to setup a 7-segment display to display a single hexadecimal digit specified the binary state of the 4 DIP switches (shown as `swDIP [3:0]` in the code). The segments of the display share a common anode that is to be powered by 3.3V from the FPGA. Therefore to turn on the segments, a logic 0 was applied to the cathode line. Since we have a 4-bit switch state, it meant we could display all hex digits from 0x0 to 0xF. All these modules were written in SystemVerilog to run on the FPGA and to ensure proper communication and signal control, they all followed the hierachy in the block diagram below:
+
+![Figure 2: Hierachical Block Diagram](images/lab1BlockDiagram.png){width=50%}
+
