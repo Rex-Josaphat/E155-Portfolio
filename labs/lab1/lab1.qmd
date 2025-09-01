@@ -26,9 +26,147 @@ Using *Lattice Radiant* to program and upload the code to the FPGA, an onboard L
 
 ### FPGA Experiment Design
 
-The task was to test the board and operate a 7-segment display. To further test the board we had to drive two LEDs responding to the states of the four-DIP switch module. The first LED had to react to the first 2 DIP switches in a manner resembling an exclusive OR (XOR) gate. The second LED had to react to the last pair of DIP switches similar to an AND gate. These LEDs responded to their respective switch pair regardless of the other pair. The third LED to be controlled had to blink at about 2.4 Hz. To do this, a counter logic was implemented to ensure the LED is driven at the correct frequency. The clock for this setup was obtained by leveraging the HSOSC module of the iCE40 Technology Library in Lattice Radiant. This allowed access to the on-board high speed oscillator providing 24MHz. A 24-bit counter was implemented with a counter increment of 2 bringing the oscillation frequency to about *2.8Hz*.
+The task was to test the board and operate a 7-segment display. To further test the board we had to drive two LEDs responding to the states of the four-DIP switch module. The first LED had to react to the first 2 DIP switches in a manner resembling an exclusive OR (XOR) gate. The second LED had to react to the last pair of DIP switches similar to an AND gate. These LEDs responded to their respective switch pair regardless of the other pair. The third LED to be controlled had to blink at about 2.4 Hz. This was done by leveraging the HSOSC module of the iCE40 Technology Library in Lattice Radiant. This allowed access to the on-board high speed oscillator providing 48MHz. Each cycle of third LED would last around 0.417 seconds meaning a full cycle requires around $\approx2*10^7$ ticks every second. With a 50% duty cycle it would take $10^7$ ticks for the half cycle. This logic was used to design a flip flop that switched the state of the LED every $10^7$ ticks (everytime the logic counter hit 10,000,000).
 
-The second task was to setup a 7-segment display to display a single hexadecimal digit specified the binary state of the 4 DIP switches (shown as `swDIP [3:0]` in the code). The segments of the display share a common anode that is to be powered by 3.3V from the FPGA. Therefore to turn on the segments, a logic 0 was applied to the cathode line. Since we have a 4-bit switch state, it meant we could display all hex digits from 0x0 to 0xF. The modules to control these elements were written in SystemVerilog to run on the FPGA and to ensure proper communication and signal control, they all followed the hierachy in the block diagram below:
+The second task was to setup a 7-segment display to display a single hexadecimal digit specified the binary state of the 4 DIP switches (shown as `swDIP [3:0]` in the code). The segments of the display share a common anode that is to be powered by 3.3V from the FPGA. Therefore to turn on the segments, a logic 0 was applied to the segment cathode line. Since we have a 4-bit switch state, it meant we could display all hex digits from 0x0 to 0xF. The modules to control these elements were written in SystemVerilog to run on the FPGA and to ensure proper communication and signal control, they all followed the hierachy in the block diagram below:
 
 ![Figure 2: Hierachical Block Diagram](images/lab1BlockDiagram.png){width=50%}
 
+After running the simulation, the full setup was installed on a breadboard to visualize the actions of the on-board LEDs and to control the 7-segment display using the following schematic:
+
+![Figure 3: FPGA Experiment Wiring Setup](link)
+
+As seen from the schematic, the on-board LEDs are hooked up to $1k\Omega$ resistors and the 7-segment display to $100\Omega$ resistors to ensure reasonable current draw from the FPGA. 
+
+## Results and Discussion
+### Testbench simulation
+Setting up the simulation was challenging due to different hurdles presented by Lattice Radiant, for example the tendency to sysnthesize the .tv file even though it's not Verilog. The testbench also required a "timeprecision specification" which was fixed by adding the code ``timescale 1ns/1ps` to the top of the testbench code. Running the simulation yielded the following waves:
+
+![Figure 4: QuestaSim Screenshot Showing Simulation Outputs and Expected Outputs](link)
+
+### Hardware Testing
+The blinking LED could not be visualized using an automated testbench, Figure 5 below shows the oscilloscope trace indicating the LED is blinking at the desired 2.4Hz.
+
+![Figure 5: Oscilloscope Trace Showing Blinking LED](link)
+
+Using Radiant programmer, the code was uploaded to the FPGA to test the response of the on-board LEDs and the 7-segment display. The hardware responded properly as shown in the example figures below:
+
+![Figure 6: Harware example 1](link)
+
+![Figure 7: example 2](link)
+
+## Conclusion
+This lab took around 22 hours to complete but...
+
+## AI Prototype Summary
+I used the new and updated LLM chatGPT 5.0 which is expected to be faster and smarter. After inputing the prompt, I received the following SystemVerilog code.
+
+```verilog
+// iCE40UP5K: Blink an LED at 2 Hz using the internal high-speed oscillator
+// Tooling: Yosys/nextpnr-ice40 or Radiant/Trellis
+`default_nettype none
+
+module top (
+    output logic LED   // constrain this to your chosen package pin in the .pcf/.lpf
+);
+    // ------------------------------------------------------------------------
+    // Internal high-speed oscillator (nominal 48 MHz with selectable dividers)
+    // CLKHF_DIV options (as strings):
+    //   "0b00" = 48 MHz, "0b01" = 24 MHz, "0b10" = 12 MHz, "0b11" = 6 MHz
+    // We'll use 12 MHz for a modest counter size.
+    // ------------------------------------------------------------------------
+    logic clk_hf;
+
+    SB_HFOSC #(
+        .CLKHF_DIV("0b10")   // 12 MHz
+    ) u_hfosc (
+        .CLKHF   (clk_hf),
+        .CLKHFEN (1'b1),     // enable clock
+        .CLKHFPU (1'b1)      // power up
+    );
+
+    // ------------------------------------------------------------------------
+    // Blink at 2 Hz: toggle every half period (0.25 s)
+    // For a 12 MHz clock: cycles per toggle = 12_000_000 / (2*2) = 3_000_000
+    // ------------------------------------------------------------------------
+    localparam int unsigned CLOCK_HZ      = 12_000_000;
+    localparam int unsigned BLINK_HZ      = 2;
+    localparam int unsigned TOGGLE_CYCLES = CLOCK_HZ / (2 * BLINK_HZ);
+
+    // Counter width computed from the terminal count
+    localparam int unsigned CNT_W = (TOGGLE_CYCLES > 1) ? $clog2(TOGGLE_CYCLES) : 1;
+
+    logic [CNT_W-1:0] cnt = '0;
+    logic             led_q = 1'b0;
+
+    always_ff @(posedge clk_hf) begin
+        if (cnt == TOGGLE_CYCLES-1) begin
+            cnt   <= '0;
+            led_q <= ~led_q;   // toggle LED every 0.25 s -> 2 Hz blink
+        end else begin
+            cnt <= cnt + 1'b1;
+        end
+    end
+
+    assign LED = led_q;
+
+endmodule
+
+`default_nettype wire
+```
+
+This code is well designed but it failed to synthesize because of the use of `SB_HFOSC` module. Radiant insisted it couldn't find the module and the LLM kept on insisting I find it in my install files which I couldn't. To fix it, I had to specifically tell it to use `HSOSC hf_osc` where the module synthesized properly.
+
+```verilog
+// Blink LED at 2 Hz using internal HSOSC (Radiant/LSE-friendly)
+`default_nettype none
+
+module top (
+    output logic LED
+);
+
+    // ------------------------------------------------------------------------
+    // HSOSC primitive (some Radiant/LSE setups expose this name).
+    // CLKHF_DIV: "0b00"=48 MHz, "0b01"=24 MHz, "0b10"=12 MHz, "0b11"=6 MHz
+    // ------------------------------------------------------------------------
+    localparam string DIV_SEL = "0b10"; // 12 MHz
+    logic clk_hf;
+
+    HSOSC hf_osc (
+        .CLKHF   (clk_hf),
+        .CLKHFEN (1'b1),
+        .CLKHFPU (1'b1)
+    );
+    defparam hf_osc.CLKHF_DIV = DIV_SEL;
+
+    // ------------------------------------------------------------------------
+    // 2 Hz blink (toggle every 0.25 s)
+    // ------------------------------------------------------------------------
+    localparam int unsigned CLOCK_HZ = (DIV_SEL=="0b00") ? 48_000_000 :
+                                       (DIV_SEL=="0b01") ? 24_000_000 :
+                                       (DIV_SEL=="0b10") ? 12_000_000 : 6_000_000;
+
+    localparam int unsigned BLINK_HZ      = 2;
+    localparam int unsigned TOGGLE_CYCLES = CLOCK_HZ / (2 * BLINK_HZ);
+    localparam int unsigned CNT_W         = (TOGGLE_CYCLES > 1) ? $clog2(TOGGLE_CYCLES) : 1;
+
+    logic [CNT_W-1:0] cnt = '0;
+    logic             led_q = 1'b0;
+
+    always_ff @(posedge clk_hf) begin
+        if (cnt == TOGGLE_CYCLES-1) begin
+            cnt   <= '0;
+            led_q <= ~led_q;
+        end else begin
+            cnt <= cnt + 1'b1;
+        end
+    end
+
+    assign LED = led_q;
+
+endmodule
+
+`default_nettype wire
+```
+
+The LLM used some new declarations that I didn't understand so I had to ask it to explain more about them. For example the use of `localparam` ensures that the set variables stay within the module and can't be altered by top level modules or other sub modules. Kinda like `private` in java. This alo allowed the LLM to use numbers instead of writing every math in binary logic. The addition of ``default_nettype wire` ensures that SystemVerilog synthesis errors out when there is an undeclared identifier instead of declaring it as a wire which complicates the debugging process in case of an error. Next time I use an LLM I'd make sure to have a more specific prompt that specifies some things to use and other specifics to keep in mind. 
