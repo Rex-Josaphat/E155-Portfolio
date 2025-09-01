@@ -16,7 +16,7 @@ The soldering process was straightforward except for the SMT components. It was 
 
 ## Experiment Setup
 
-The main task of the lab was to light up on-board LEDs and a MAN6410 seven-segment display using one of the DIP switch modules on the development board. This was to be done using SystemVerilog modules uploaded to the FPGA module on the board.
+The main task of the lab was to light up on-board LEDs and a MAN6480 seven-segment display using one of the DIP switch modules on the development board. This was to be done using SystemVerilog modules uploaded to the FPGA module on the board.
 
 ### FPGA and MCU Testing 
 
@@ -26,9 +26,9 @@ Using *Lattice Radiant* to program and upload the code to the FPGA, an onboard L
 
 ### FPGA Experiment Design
 
-The task was to test the board and operate a 7-segment display. To further test the board we had to drive two LEDs responding to the states of the four-DIP switch module. The first LED had to react to the first 2 DIP switches in a manner resembling an exclusive OR (XOR) gate. The second LED had to react to the last pair of DIP switches similar to an AND gate. These LEDs responded to their respective switch pair regardless of the other pair. The third LED to be controlled had to blink at about 2.4 Hz. To do this, a counter logic was implemented to ensure the LED is driven at the correct frequency. The clock for this setup was obtained by leveraging the HSOSC module of the iCE40 Technology Library in Lattice Radiant. This allowed access to the on-board high speed oscillator providing 48MHz. A 24-bit counter was implemented with a counter increment of 2 bringing the oscillation frequency to about *2.8Hz*.
+The task was to test the board and operate a 7-segment display. To further test the board we had to drive two LEDs responding to the states of the four-DIP switch module. The first LED had to react to the first 2 DIP switches in a manner resembling an exclusive OR (XOR) gate. The second LED had to react to the last pair of DIP switches similar to an AND gate. These LEDs responded to their respective switch pair regardless of the other pair. The third LED to be controlled had to blink at about 2.4 Hz. To do this, a counter logic was implemented to ensure the LED is driven at the correct frequency. The clock for this setup was obtained by leveraging the HSOSC module of the iCE40 Technology Library in Lattice Radiant. This allowed access to the on-board high speed oscillator providing 24MHz. A 24-bit counter was implemented with a counter increment of 2 bringing the oscillation frequency to about *2.8Hz*.
 
-The second task was to setup a 7-segment display to display a single hexadecimal digit specified the binary state of the 4 DIP switches (shown as `swDIP [3:0]` in the code). The segments of the display share a common anode that is to be powered by 3.3V from the FPGA. Therefore to turn on the segments, a logic 0 was applied to the cathode line. Since we have a 4-bit switch state, it meant we could display all hex digits from 0x0 to 0xF. All these modules were written in SystemVerilog to run on the FPGA and to ensure proper communication and signal control, they all followed the hierachy in the block diagram below:
+The second task was to setup a 7-segment display to display a single hexadecimal digit specified the binary state of the 4 DIP switches (shown as `swDIP [3:0]` in the code). The segments of the display share a common anode that is to be powered by 3.3V from the FPGA. Therefore to turn on the segments, a logic 0 was applied to the cathode line. Since we have a 4-bit switch state, it meant we could display all hex digits from 0x0 to 0xF. The modules to control these elements were written in SystemVerilog to run on the FPGA and to ensure proper communication and signal control, they all followed the hierachy in the block diagram below:
 
 ![Figure 2: Hierachical Block Diagram](images/lab1BlockDiagram.png){width=50%}
 
