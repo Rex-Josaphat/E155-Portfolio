@@ -40,7 +40,7 @@ As seen from the schematic, the on-board LEDs are hooked up to $1k\Omega$ resist
 
 ## Results and Discussion
 ### Testbench simulation
-Setting up the simulation was challenging due to different hurdles presented by Lattice Radiant, for example the tendency to sysnthesize the .tv file even though it's not Verilog. The testbench also required a "timeprecision specification" which was fixed by adding the code ``timescale 1ns/1ps` to the top of the testbench code. Running the simulation yielded the following waves:
+Setting up the simulation was challenging due to different hurdles presented by Lattice Radiant, for example the tendency to sysnthesize the .tv file even though it's not Verilog. The testbench also required a "timeprecision specification" which was fixed by adding the code ``timescale 1ns/1ns` to the top of the testbench code. Running the simulation yielded the following waves:
 
 ![Figure 4: QuestaSim Screenshot Showing Simulation Outputs and Expected Outputs](link)
 
@@ -109,7 +109,6 @@ module top (
     end
 
     assign LED = led_q;
-
 endmodule
 
 `default_nettype wire
@@ -163,10 +162,9 @@ module top (
     end
 
     assign LED = led_q;
-
 endmodule
 
 `default_nettype wire
 ```
 
-The LLM used some new declarations that I didn't understand so I had to ask it to explain more about them. For example the use of `localparam` ensures that the set variables stay within the module and can't be altered by top level modules or other sub modules. Kinda like `private` in java. This alo allowed the LLM to use numbers instead of writing every math in binary logic. The addition of ``default_nettype wire` ensures that SystemVerilog synthesis errors out when there is an undeclared identifier instead of declaring it as a wire which complicates the debugging process in case of an error. Next time I use an LLM I'd make sure to have a more specific prompt that specifies some things to use and other specifics to keep in mind. 
+The LLM used some new declarations that I didn't understand so I had to ask it to explain more about them. For example the use of `localparam` ensures that the set variables stay within the module and can't be altered by top level modules or other sub modules. Kinda like `private` in java. This also allowed the LLM to use numbers instead of writing every math in binary logic. The addition of ``default_nettype wire` ensures that SystemVerilog synthesis errors out when there is an undeclared identifier instead of declaring it as a wire which complicates the debugging process in case of an error. Next time I use an LLM I'd make sure to have a more specific prompt that specifies some things to use and other specifics to keep in mind. 
