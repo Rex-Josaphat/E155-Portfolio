@@ -1,5 +1,7 @@
 project:
   type: website
+  resources: 
+    - images/JN_Icon.ico
 
 website:
   title: "E155 Portfolio"
@@ -36,4 +38,6 @@ format:
     css: styles.css
     toc: true
     link-external-newwindow: true
+    include-in-header:
+      - favicon.html
 

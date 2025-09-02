@@ -40,20 +40,24 @@ As seen from the schematic, the on-board LEDs are hooked up to $1k\Omega$ resist
 
 ## Results and Discussion
 ### Testbench simulation
-Setting up the simulation was challenging due to different hurdles presented by Lattice Radiant, for example the tendency to sysnthesize the .tv file even though it's not Verilog. The testbench also required a "timeprecision specification" which was fixed by adding the code ``timescale 1ns/1ns` to the top of the testbench code. Running the simulation yielded the following waves:
+Setting up the simulation was challenging due to different hurdles presented by Lattice Radiant, for example the tendency to sysnthesize the .tv file even though it's not Verilog. The testbench also required a "timeprecision specification" which was fixed by adding the code ``timescale 1ns/1ns` to the top of the testbench code. Each module was simulated individually and running the simulation yielded the following waves:
 
-![Figure 4: QuestaSim Screenshot Showing Simulation Outputs and Expected Outputs](link)
+![Figure 4: QuestaSim Screenshot Showing on-board LED Simulation Outputs and Expected Outputs](images/onBoarLED_tb.png)
+
+![Figure 5: QuestaSim Screenshot Showing Seven-segment Display Simulation Outputs and Expected Outputs](images/7segDisp_tb.png)
+
+As shown from the simulation waves in Figures 4 and 5, the setup responded as expected which is a good sign.
 
 ### Hardware Testing
-The blinking LED could not be visualized using an automated testbench, Figure 5 below shows the oscilloscope trace indicating the LED is blinking at the desired 2.4Hz.
+The blinking LED could not be visualized using an automated testbench, Figure 6 below shows the oscilloscope trace indicating the LED is blinking at the desired 2.4Hz.
 
-![Figure 5: Oscilloscope Trace Showing Blinking LED](link)
+![Figure 6: Oscilloscope Trace Showing Blinking LED](link)
 
 Using Radiant programmer, the code was uploaded to the FPGA to test the response of the on-board LEDs and the 7-segment display. The hardware responded properly as shown in the example figures below:
 
-![Figure 6: Harware example 1](link)
+![Figure 7: Harware example 1](link)
 
-![Figure 7: example 2](link)
+![Figure 8: example 2](link)
 
 ## Conclusion
 This lab took around 22 hours to complete but...
