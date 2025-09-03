@@ -1,11 +1,11 @@
 ---
-title: "E155 Lab 1: FPGA and MCU Setup and Testing"
-format: 
-    html: 
-        Code-Links:
-            - text: "Lab 1 Repository"
-              href: https://github.com/Rex-Josaphat/E155-LAB1
-              icon: github
+title: 'E155 Lab 1: FPGA and MCU Setup and Testing'
+format:
+  html:
+    code-links:
+      - text: "Lab 1 Repository"
+        href: https://github.com/Rex-Josaphat/E155-LAB1
+        icon: github
 ---
 ## Introduction
 
