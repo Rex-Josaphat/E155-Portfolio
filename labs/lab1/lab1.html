@@ -267,20 +267,20 @@ window.Quarto = {
 <section id="development-board-setup" class="level2">
 <h2 class="anchored" data-anchor-id="development-board-setup">Development Board Setup</h2>
 <p>The primary purpose of this lab was to assemble the development board to be used for the different labs and projects over the semester. The provided board was an empty PCB to be populated by different electrical components within the categories of Through Hole Technology (THT) as Surface Mount Technology (SMT). The electrical components provided were: resistors, capacitors, voltage regulator, DIP switches, push-button switches, jumpers, and LEDs. At the heart of the board there is the Nucleo-L432KC microcontroller unit (MCU) and the UPduino v3.1 FPGA which is the primary component handling the tasks of this lab.</p>
-<p>The soldering process was straightforward except for the SMT components. It was hard to solder the voltage regulators because the underside plate was not sticking to the board fully. Surprisingly it was easy to solder the LEDs and other smaller SMT components probaly because I was just connecting to specific terminals as opposed to the wide plate of the voltage regulators. The complete development board is shown below:</p>
+<p>The soldering process was straightforward except for the SMT components. It was hard to solder the voltage regulators because the underside plate was not sticking to the board fully. Surprisingly it was easy to solder the LEDs and other smaller SMT components probaly because I was just connecting to specific terminals as opposed to the wide plate of the voltage regulators. Due to inventory shortages, I was unable to install D1, the LED responsible to show if the board is powered on. The complete development board is shown below:</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="link.png" class="img-fluid figure-img"></p>
+<p><img src="images/fullBoard.jpg" class="img-fluid figure-img" style="width:60.0%"></p>
 <figcaption>Figure 1: Fully Assembled Development Board</figcaption>
 </figure>
 </div>
 </section>
 <section id="experiment-setup" class="level2">
 <h2 class="anchored" data-anchor-id="experiment-setup">Experiment Setup</h2>
-<p>The main task of the lab was to light up on-board LEDs and a MAN6480 seven-segment display using one of the DIP switch modules on the development board. This was to be done using SystemVerilog modules uploaded to the FPGA module on the board.</p>
+<p>The main task of the lab was to light up on-board LEDs and a HDSP-511A seven-segment display using one of the DIP switch modules on the development board. This was to be done using SystemVerilog modules uploaded to the FPGA module on the board.</p>
 <section id="fpga-and-mcu-testing" class="level3">
 <h3 class="anchored" data-anchor-id="fpga-and-mcu-testing">FPGA and MCU Testing</h3>
-<p>Before setting up for the actual experiment the FPGA and MCU, the brains of the whole board, were tested to ensure they work and can communicate to the respective components on the board they’re internally connected to. Determining if the board was powered on properly was fairly easy since we had a red on-board LED to light up when power is coursing thorugh the board and could also read the input voltages from the regulators using the tabletop multimeters in the lab space.</p>
+<p>Before setting up for the actual experiment the FPGA and MCU, the brains of the whole board, were tested to ensure they work and can communicate to the respective components on the board they’re internally connected to. Determining if the board was powered on properly required some work without the red on-board VIN LED but I was able to read the input voltages from the regulators and the VIN pins using the tabletop multimeters in the lab space.</p>
 <p>Using <em>Lattice Radiant</em> to program and upload the code to the FPGA, an onboard LED (D3) was toggled to blink at about 1HZ. Testing the MCU used a similar approach but <em>Segger Embedded Studio</em> was used to program the MCU where it blinked three on-board LEDs (D2, D3, and D7). These testing procedures worked out as expected indicating that the FPGA and MCU are integrated to the board correcltly.</p>
 </section>
 <section id="fpga-experiment-design" class="level3">
@@ -300,7 +300,8 @@ window.Quarto = {
 <figcaption>Figure 3: FPGA Experiment Wiring Setup</figcaption>
 </figure>
 </div>
-<p>As seen from the schematic, the on-board LEDs are hooked up to <span class="math inline">\(1k\Omega\)</span> resistors and the 7-segment display to <span class="math inline">\(100\Omega\)</span> resistors to ensure reasonable current draw from the FPGA.</p>
+<p>As seen from the schematic, the on-board LEDs are hooked up to <span class="math inline">\(1k\Omega\)</span> resistors and the 7-segment display to <span class="math inline">\(100\Omega\)</span> resistors to ensure reasonable(safe) current draw from the FPGA.</p>
+<p>The 7-segment display LEDs have a typical forward voltage drop of <span class="math inline">\(\approx2.00V\)</span>. The FPGA limits the total current draw to <span class="math inline">\(200mA\)</span>. With a target current between <span class="math inline">\(2-20mA\)</span> to drive the LEDs, and the input voltage of <span class="math inline">\(3.3V\)</span> from the FPGA, I calculated the desired resistor values using <span class="math inline">\(R = \frac{V_{\text{in}} - V_{f}}{I_{des}}\)</span> obtaining that R should be between <span class="math inline">\(65-650\Omega\)</span>. I opted for the modest <span class="math inline">\(100\Omega\)</span> which draws <span class="math inline">\(13mA\)</span> and is well within a range where the total current draw of the full display won’t overwhelm the FPGA.</p>
 </section>
 </section>
 <section id="results-and-discussion" class="level2">
@@ -324,31 +325,31 @@ window.Quarto = {
 </section>
 <section id="hardware-testing" class="level3">
 <h3 class="anchored" data-anchor-id="hardware-testing">Hardware Testing</h3>
-<p>The blinking LED could not be visualized using an automated testbench, Figure 6 below shows the oscilloscope trace indicating the LED is blinking at the desired 2.4Hz.</p>
+<p>The blinking LED could not be visualized using an automated testbench, Figure 6 below shows the oscilloscope trace indicating the LED is blinking at the desired <span class="math inline">\(2.4Hz\)</span> and with a duty cycle of <span class="math inline">\(50\%\)</span>.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="link.png" class="img-fluid figure-img"></p>
+<p><img src="images/oscilloscopeTrace.png" class="img-fluid figure-img" style="width:70.0%"></p>
 <figcaption>Figure 6: Oscilloscope Trace Showing Blinking LED</figcaption>
 </figure>
 </div>
 <p>Using Radiant programmer, the code was uploaded to the FPGA to test the response of the on-board LEDs and the 7-segment display. The hardware responded properly as shown in the example figures below:</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="link.png" class="img-fluid figure-img"></p>
-<figcaption>Figure 7: Harware example 1</figcaption>
+<p><img src="images/example1.jpg" class="img-fluid figure-img"></p>
+<figcaption>Figure 7: Hardware Execution Example 1 Showing Outputs to Switch Input 4b’1011</figcaption>
 </figure>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="link.png" class="img-fluid figure-img"></p>
-<figcaption>Figure 8: example 2</figcaption>
+<p><img src="images/example2.jpg" class="img-fluid figure-img"></p>
+<figcaption>Figure 7: Hardware Execution Example 1 Showing Outputs to Switch Input 4b’1001</figcaption>
 </figure>
 </div>
 </section>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
-<p>This lab took around 22 hours to complete but…</p>
+<p>This lab took around 22 hours to complete mainly because I had to go through a lot of debugging processes to ensure my hardware works and connect to the board. In the end, it turned out to be the issue that I assigned hardware pin constraint to one of the SPI pins which is used to connect to the FPGA. The lab was amazing overall and I was able to brush off from my skill earned in E85.</p>
 </section>
 <section id="ai-prototype-summary" class="level2">
 <h2 class="anchored" data-anchor-id="ai-prototype-summary">AI Prototype Summary</h2>
