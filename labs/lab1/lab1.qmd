@@ -15,9 +15,9 @@ In this lab, an FPGA and MCU were installed on a development board setup and tes
 
 The primary purpose of this lab was to assemble the development board to be used for the different labs and projects over the semester. The provided board was an empty PCB to be populated by different electrical components within the categories of Through Hole Technology (THT) as Surface Mount Technology (SMT). The electrical components provided were: resistors, capacitors, voltage regulator, DIP switches, push-button switches, jumpers, and LEDs. At the heart of the board there is the Nucleo-L432KC microcontroller unit (MCU) and the UPduino v3.1 FPGA which is the primary component handling the tasks of this lab. 
 
-The soldering process was straightforward except for the SMT components. It was hard to solder the voltage regulators because the underside plate was not sticking to the board fully. Surprisingly it was easy to solder the LEDs and other smaller SMT components probaly because I was just connecting to specific terminals as opposed to the wide plate of the voltage regulators. The complete development board is shown below:
+The soldering process was straightforward except for the SMT components. It was hard to solder the voltage regulators because the underside plate was not sticking to the board fully. Surprisingly it was easy to solder the LEDs and other smaller SMT components probaly because I was just connecting to specific terminals as opposed to the wide plate of the voltage regulators. Due to inventory shortages, I was unable to install D1, the LED responsible to show if the board is powered on. The complete development board is shown below:
 
-![Figure 1: Fully Assembled Development Board](link)
+![Figure 1: Fully Assembled Development Board](images/fullBoard.jpg){width="60%"}
 
 ## Experiment Setup
 
@@ -25,7 +25,7 @@ The main task of the lab was to light up on-board LEDs and a HDSP-511A seven-seg
 
 ### FPGA and MCU Testing 
 
-Before setting up for the actual experiment the FPGA and MCU, the brains of the whole board, were tested to ensure they work and can communicate to the respective components on the board they're internally connected to. Determining if the board was powered on properly was fairly easy since we had a red on-board LED to light up when power is coursing thorugh the board and could also read the input voltages from the regulators using the tabletop multimeters in the lab space. 
+Before setting up for the actual experiment the FPGA and MCU, the brains of the whole board, were tested to ensure they work and can communicate to the respective components on the board they're internally connected to. Determining if the board was powered on properly required some work without the red on-board VIN LED but I was able to read the input voltages from the regulators and the VIN pins using the tabletop multimeters in the lab space. 
 
 Using *Lattice Radiant* to program and upload the code to the FPGA, an onboard LED (D3) was toggled to blink at about 1HZ. Testing the MCU used a similar approach but *Segger Embedded Studio* was used to program the MCU where it blinked three on-board LEDs (D2, D3, and D7). These testing procedures worked out as expected indicating that the FPGA and MCU are integrated to the board correcltly.
 
@@ -56,15 +56,15 @@ Setting up the simulation was challenging due to different hurdles presented by 
 As shown from the simulation waves in Figures 4 and 5, the setup responded as expected which is a good sign.
 
 ### Hardware Testing
-The blinking LED could not be visualized using an automated testbench, Figure 6 below shows the oscilloscope trace indicating the LED is blinking at the desired 2.4Hz.
+The blinking LED could not be visualized using an automated testbench, Figure 6 below shows the oscilloscope trace indicating the LED is blinking at the desired $2.4Hz$ and with a duty cycle of $50\%$.
 
-![Figure 6: Oscilloscope Trace Showing Blinking LED](link)
+![Figure 6: Oscilloscope Trace Showing Blinking LED](images/oscilloscopeTrace.png){width="70%"}
 
 Using Radiant programmer, the code was uploaded to the FPGA to test the response of the on-board LEDs and the 7-segment display. The hardware responded properly as shown in the example figures below:
 
-![Figure 7: Harware example 1](link)
+![Figure 7: Hardware Execution Example 1 Showing Outputs to Switch Input 4b'1011](images/example1.jpg)
 
-![Figure 8: example 2](link)
+![Figure 7: Hardware Execution Example 1 Showing Outputs to Switch Input 4b'1001](images/example2.jpg)
 
 ## Conclusion
 This lab took around 22 hours to complete mainly because I had to go through a lot of debugging processes to ensure my hardware works and connect to the board. In the end, it turned out to be the issue that I assigned hardware pin constraint to one of the SPI pins which is used to connect to the FPGA. The lab was amazing overall and I was able to brush off from my skill earned in E85.
