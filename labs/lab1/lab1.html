@@ -20,6 +20,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -68,7 +103,38 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<link rel="icon" href="images/JN_Icon.ico" type="image/x-icon">
 
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../../styles.css">
 </head>
@@ -156,6 +222,19 @@ ul.task-list li input[type="checkbox"] {
    
   <ul>
   <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#development-board-setup" id="toc-development-board-setup" class="nav-link" data-scroll-target="#development-board-setup">Development Board Setup</a></li>
+  <li><a href="#experiment-setup" id="toc-experiment-setup" class="nav-link" data-scroll-target="#experiment-setup">Experiment Setup</a>
+  <ul class="collapse">
+  <li><a href="#fpga-and-mcu-testing" id="toc-fpga-and-mcu-testing" class="nav-link" data-scroll-target="#fpga-and-mcu-testing">FPGA and MCU Testing</a></li>
+  <li><a href="#fpga-experiment-design" id="toc-fpga-experiment-design" class="nav-link" data-scroll-target="#fpga-experiment-design">FPGA Experiment Design</a></li>
+  </ul></li>
+  <li><a href="#results-and-discussion" id="toc-results-and-discussion" class="nav-link" data-scroll-target="#results-and-discussion">Results and Discussion</a>
+  <ul class="collapse">
+  <li><a href="#testbench-simulation" id="toc-testbench-simulation" class="nav-link" data-scroll-target="#testbench-simulation">Testbench simulation</a></li>
+  <li><a href="#hardware-testing" id="toc-hardware-testing" class="nav-link" data-scroll-target="#hardware-testing">Hardware Testing</a></li>
+  </ul></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  <li><a href="#ai-prototype-summary" id="toc-ai-prototype-summary" class="nav-link" data-scroll-target="#ai-prototype-summary">AI Prototype Summary</a></li>
   </ul>
 </nav>
     </div>
@@ -183,7 +262,197 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>In this lab, an FPGA and MCU were installed on a development board setup and tested to verify proper functionality. First, the development board was built by soldering on each individual components following provided BOM, schematic, and silkscreen on the provided PCB.</p>
+<p>In this lab, an FPGA and MCU were installed on a development board setup and tested to verify proper functionality. First, the development board was built by soldering on each individual components following provided BOM, schematic, and the silkscreen on the provided PCB.</p>
+</section>
+<section id="development-board-setup" class="level2">
+<h2 class="anchored" data-anchor-id="development-board-setup">Development Board Setup</h2>
+<p>The primary purpose of this lab was to assemble the development board to be used for the different labs and projects over the semester. The provided board was an empty PCB to be populated by different electrical components within the categories of Through Hole Technology (THT) as Surface Mount Technology (SMT). The electrical components provided were: resistors, capacitors, voltage regulator, DIP switches, push-button switches, jumpers, and LEDs. At the heart of the board there is the Nucleo-L432KC microcontroller unit (MCU) and the UPduino v3.1 FPGA which is the primary component handling the tasks of this lab.</p>
+<p>The soldering process was straightforward except for the SMT components. It was hard to solder the voltage regulators because the underside plate was not sticking to the board fully. Surprisingly it was easy to solder the LEDs and other smaller SMT components probaly because I was just connecting to specific terminals as opposed to the wide plate of the voltage regulators. The complete development board is shown below:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="link.png" class="img-fluid figure-img"></p>
+<figcaption>Figure 1: Fully Assembled Development Board</figcaption>
+</figure>
+</div>
+</section>
+<section id="experiment-setup" class="level2">
+<h2 class="anchored" data-anchor-id="experiment-setup">Experiment Setup</h2>
+<p>The main task of the lab was to light up on-board LEDs and a MAN6480 seven-segment display using one of the DIP switch modules on the development board. This was to be done using SystemVerilog modules uploaded to the FPGA module on the board.</p>
+<section id="fpga-and-mcu-testing" class="level3">
+<h3 class="anchored" data-anchor-id="fpga-and-mcu-testing">FPGA and MCU Testing</h3>
+<p>Before setting up for the actual experiment the FPGA and MCU, the brains of the whole board, were tested to ensure they work and can communicate to the respective components on the board they’re internally connected to. Determining if the board was powered on properly was fairly easy since we had a red on-board LED to light up when power is coursing thorugh the board and could also read the input voltages from the regulators using the tabletop multimeters in the lab space.</p>
+<p>Using <em>Lattice Radiant</em> to program and upload the code to the FPGA, an onboard LED (D3) was toggled to blink at about 1HZ. Testing the MCU used a similar approach but <em>Segger Embedded Studio</em> was used to program the MCU where it blinked three on-board LEDs (D2, D3, and D7). These testing procedures worked out as expected indicating that the FPGA and MCU are integrated to the board correcltly.</p>
+</section>
+<section id="fpga-experiment-design" class="level3">
+<h3 class="anchored" data-anchor-id="fpga-experiment-design">FPGA Experiment Design</h3>
+<p>The task was to test the board and operate a 7-segment display. To further test the board we had to drive two LEDs responding to the states of the four-DIP switch module. The first LED had to react to the first 2 DIP switches in a manner resembling an exclusive OR (XOR) gate. The second LED had to react to the last pair of DIP switches similar to an AND gate. These LEDs responded to their respective switch pair regardless of the other pair. The third LED to be controlled had to blink at about 2.4 Hz. This was done by leveraging the HSOSC module of the iCE40 Technology Library in Lattice Radiant. This allowed access to the on-board high speed oscillator providing 48MHz. Each cycle of third LED would last around 0.417 seconds meaning a full cycle requires around <span class="math inline">\(\approx2*10^7\)</span> ticks every second. With a 50% duty cycle it would take <span class="math inline">\(10^7\)</span> ticks for the half cycle. This logic was used to design a flip flop that switched the state of the LED every <span class="math inline">\(10^7\)</span> ticks (everytime the logic counter hit 10,000,000).</p>
+<p>The second task was to setup a 7-segment display to display a single hexadecimal digit specified the binary state of the 4 DIP switches (shown as <code>swDIP [3:0]</code> in the code). The segments of the display share a common anode that is to be powered by 3.3V from the FPGA. Therefore to turn on the segments, a logic 0 was applied to the segment cathode line. Since we have a 4-bit switch state, it meant we could display all hex digits from 0x0 to 0xF. The modules to control these elements were written in SystemVerilog to run on the FPGA and to ensure proper communication and signal control, they all followed the hierachy in the block diagram below:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/lab1BlockDiagram.png" class="img-fluid figure-img" style="width:50.0%"></p>
+<figcaption>Figure 2: Hierachical Block Diagram</figcaption>
+</figure>
+</div>
+<p>After running the simulation, the full setup was installed on a breadboard to visualize the actions of the on-board LEDs and to control the 7-segment display using the following schematic:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="link.png" class="img-fluid figure-img"></p>
+<figcaption>Figure 3: FPGA Experiment Wiring Setup</figcaption>
+</figure>
+</div>
+<p>As seen from the schematic, the on-board LEDs are hooked up to <span class="math inline">\(1k\Omega\)</span> resistors and the 7-segment display to <span class="math inline">\(100\Omega\)</span> resistors to ensure reasonable current draw from the FPGA.</p>
+</section>
+</section>
+<section id="results-and-discussion" class="level2">
+<h2 class="anchored" data-anchor-id="results-and-discussion">Results and Discussion</h2>
+<section id="testbench-simulation" class="level3">
+<h3 class="anchored" data-anchor-id="testbench-simulation">Testbench simulation</h3>
+<p>Setting up the simulation was challenging due to different hurdles presented by Lattice Radiant, for example the tendency to sysnthesize the .tv file even though it’s not Verilog. The testbench also required a “timeprecision specification” which was fixed by adding the code `<code>timescale 1ns/1ns</code> to the top of the testbench code. Each module was simulated individually and running the simulation yielded the following waves:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/onBoarLED_tb.png" class="img-fluid figure-img"></p>
+<figcaption>Figure 4: QuestaSim Screenshot Showing on-board LED Simulation Outputs and Expected Outputs</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/7segDisp_tb.png" class="img-fluid figure-img"></p>
+<figcaption>Figure 5: QuestaSim Screenshot Showing Seven-segment Display Simulation Outputs and Expected Outputs</figcaption>
+</figure>
+</div>
+<p>As shown from the simulation waves in Figures 4 and 5, the setup responded as expected which is a good sign.</p>
+</section>
+<section id="hardware-testing" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-testing">Hardware Testing</h3>
+<p>The blinking LED could not be visualized using an automated testbench, Figure 6 below shows the oscilloscope trace indicating the LED is blinking at the desired 2.4Hz.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="link.png" class="img-fluid figure-img"></p>
+<figcaption>Figure 6: Oscilloscope Trace Showing Blinking LED</figcaption>
+</figure>
+</div>
+<p>Using Radiant programmer, the code was uploaded to the FPGA to test the response of the on-board LEDs and the 7-segment display. The hardware responded properly as shown in the example figures below:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="link.png" class="img-fluid figure-img"></p>
+<figcaption>Figure 7: Harware example 1</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="link.png" class="img-fluid figure-img"></p>
+<figcaption>Figure 8: example 2</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>This lab took around 22 hours to complete but…</p>
+</section>
+<section id="ai-prototype-summary" class="level2">
+<h2 class="anchored" data-anchor-id="ai-prototype-summary">AI Prototype Summary</h2>
+<p>I used the new and updated LLM chatGPT 5.0 which is expected to be faster and smarter. After inputing the prompt, I received the following SystemVerilog code.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode verilog code-with-copy"><code class="sourceCode verilog"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// iCE40UP5K: Blink an LED at 2 Hz using the internal high-speed oscillator</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Tooling: Yosys/nextpnr-ice40 or Radiant/Trellis</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ot">`default_nettype none</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> top <span class="op">(</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">output</span> logic LED   <span class="co">// constrain this to your chosen package pin in the .pcf/.lpf</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="op">);</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ------------------------------------------------------------------------</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Internal high-speed oscillator (nominal 48 MHz with selectable dividers)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// CLKHF_DIV options (as strings):</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">//   "0b00" = 48 MHz, "0b01" = 24 MHz, "0b10" = 12 MHz, "0b11" = 6 MHz</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// We'll use 12 MHz for a modest counter size.</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ------------------------------------------------------------------------</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    logic clk_hf<span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    SB_HFOSC #<span class="op">(</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        .CLKHF_DIV<span class="op">(</span><span class="st">"0b10"</span><span class="op">)</span>   <span class="co">// 12 MHz</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">)</span> u_hfosc <span class="op">(</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        .CLKHF   <span class="op">(</span>clk_hf<span class="op">),</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        .CLKHFEN <span class="op">(</span><span class="bn">1'b1</span><span class="op">),</span>     <span class="co">// enable clock</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>        .CLKHFPU <span class="op">(</span><span class="bn">1'b1</span><span class="op">)</span>      <span class="co">// power up</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">);</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ------------------------------------------------------------------------</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Blink at 2 Hz: toggle every half period (0.25 s)</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// For a 12 MHz clock: cycles per toggle = 12_000_000 / (2*2) = 3_000_000</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ------------------------------------------------------------------------</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="dt">localparam</span> int unsigned CLOCK_HZ      <span class="op">=</span> <span class="dv">12</span>_000_000<span class="op">;</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    <span class="dt">localparam</span> int unsigned BLINK_HZ      <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    <span class="dt">localparam</span> int unsigned TOGGLE_CYCLES <span class="op">=</span> CLOCK_HZ <span class="op">/</span> <span class="op">(</span><span class="dv">2</span> * BLINK_HZ<span class="op">);</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Counter width computed from the terminal count</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    <span class="dt">localparam</span> int unsigned CNT_W <span class="op">=</span> <span class="op">(</span>TOGGLE_CYCLES <span class="op">&gt;</span> <span class="dv">1</span><span class="op">)</span> <span class="op">?</span> <span class="dt">$clog2</span><span class="op">(</span>TOGGLE_CYCLES<span class="op">)</span> <span class="op">:</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    logic <span class="op">[</span>CNT_W<span class="dv">-1</span><span class="op">:</span><span class="dv">0</span><span class="op">]</span> cnt <span class="op">=</span> '<span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>    logic             led_q <span class="op">=</span> <span class="bn">1'b0</span><span class="op">;</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>    always_ff <span class="op">@(</span><span class="kw">posedge</span> clk_hf<span class="op">)</span> <span class="kw">begin</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> <span class="op">(</span>cnt <span class="op">==</span> TOGGLE_CYCLES<span class="dv">-1</span><span class="op">)</span> <span class="kw">begin</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>            cnt   <span class="op">&lt;=</span> '<span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>            led_q <span class="op">&lt;=</span> <span class="op">~</span>led_q<span class="op">;</span>   <span class="co">// toggle LED every 0.25 s -&gt; 2 Hz blink</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>        <span class="kw">end</span> <span class="kw">else</span> <span class="kw">begin</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>            cnt <span class="op">&lt;=</span> cnt <span class="op">+</span> <span class="bn">1'b1</span><span class="op">;</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>        <span class="kw">end</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> LED <span class="op">=</span> led_q<span class="op">;</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="ot">`default_nettype wire</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This code is well designed but it failed to synthesize because of the use of <code>SB_HFOSC</code> module. Radiant insisted it couldn’t find the module and the LLM kept on insisting I find it in my install files which I couldn’t. To fix it, I had to specifically tell it to use <code>HSOSC hf_osc</code> where the module synthesized properly.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode verilog code-with-copy"><code class="sourceCode verilog"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Blink LED at 2 Hz using internal HSOSC (Radiant/LSE-friendly)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ot">`default_nettype none</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> top <span class="op">(</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">output</span> logic LED</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">);</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ------------------------------------------------------------------------</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// HSOSC primitive (some Radiant/LSE setups expose this name).</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// CLKHF_DIV: "0b00"=48 MHz, "0b01"=24 MHz, "0b10"=12 MHz, "0b11"=6 MHz</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ------------------------------------------------------------------------</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">localparam</span> string DIV_SEL <span class="op">=</span> <span class="st">"0b10"</span><span class="op">;</span> <span class="co">// 12 MHz</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    logic clk_hf<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    HSOSC hf_osc <span class="op">(</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        .CLKHF   <span class="op">(</span>clk_hf<span class="op">),</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        .CLKHFEN <span class="op">(</span><span class="bn">1'b1</span><span class="op">),</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        .CLKHFPU <span class="op">(</span><span class="bn">1'b1</span><span class="op">)</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">);</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">defparam</span> hf_osc.CLKHF_DIV <span class="op">=</span> DIV_SEL<span class="op">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ------------------------------------------------------------------------</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2 Hz blink (toggle every 0.25 s)</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ------------------------------------------------------------------------</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="dt">localparam</span> int unsigned CLOCK_HZ <span class="op">=</span> <span class="op">(</span>DIV_SEL<span class="op">==</span><span class="st">"0b00"</span><span class="op">)</span> <span class="op">?</span> <span class="dv">48</span>_000_000 <span class="op">:</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>                                       <span class="op">(</span>DIV_SEL<span class="op">==</span><span class="st">"0b01"</span><span class="op">)</span> <span class="op">?</span> <span class="dv">24</span>_000_000 <span class="op">:</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>                                       <span class="op">(</span>DIV_SEL<span class="op">==</span><span class="st">"0b10"</span><span class="op">)</span> <span class="op">?</span> <span class="dv">12</span>_000_000 <span class="op">:</span> <span class="dv">6</span>_000_000<span class="op">;</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="dt">localparam</span> int unsigned BLINK_HZ      <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    <span class="dt">localparam</span> int unsigned TOGGLE_CYCLES <span class="op">=</span> CLOCK_HZ <span class="op">/</span> <span class="op">(</span><span class="dv">2</span> * BLINK_HZ<span class="op">);</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    <span class="dt">localparam</span> int unsigned CNT_W         <span class="op">=</span> <span class="op">(</span>TOGGLE_CYCLES <span class="op">&gt;</span> <span class="dv">1</span><span class="op">)</span> <span class="op">?</span> <span class="dt">$clog2</span><span class="op">(</span>TOGGLE_CYCLES<span class="op">)</span> <span class="op">:</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    logic <span class="op">[</span>CNT_W<span class="dv">-1</span><span class="op">:</span><span class="dv">0</span><span class="op">]</span> cnt <span class="op">=</span> '<span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    logic             led_q <span class="op">=</span> <span class="bn">1'b0</span><span class="op">;</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    always_ff <span class="op">@(</span><span class="kw">posedge</span> clk_hf<span class="op">)</span> <span class="kw">begin</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> <span class="op">(</span>cnt <span class="op">==</span> TOGGLE_CYCLES<span class="dv">-1</span><span class="op">)</span> <span class="kw">begin</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>            cnt   <span class="op">&lt;=</span> '<span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>            led_q <span class="op">&lt;=</span> <span class="op">~</span>led_q<span class="op">;</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>        <span class="kw">end</span> <span class="kw">else</span> <span class="kw">begin</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>            cnt <span class="op">&lt;=</span> cnt <span class="op">+</span> <span class="bn">1'b1</span><span class="op">;</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>        <span class="kw">end</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> LED <span class="op">=</span> led_q<span class="op">;</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="ot">`default_nettype wire</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The LLM used some new declarations that I didn’t understand so I had to ask it to explain more about them. For example the use of <code>localparam</code> ensures that the set variables stay within the module and can’t be altered by top level modules or other sub modules. Kinda like <code>private</code> in java. This also allowed the LLM to use numbers instead of writing every math in binary logic. The addition of `<code>default_nettype wire</code> ensures that SystemVerilog synthesis errors out when there is an undeclared identifier instead of declaring it as a wire which complicates the debugging process in case of an error. Next time I use an LLM I’d make sure to have a more specific prompt that specifies some things to use and other specifics to keep in mind.</p>
 
 
 </section>
