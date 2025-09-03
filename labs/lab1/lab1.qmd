@@ -1,6 +1,11 @@
 ---
 title: "E155 Lab 1: FPGA and MCU Setup and Testing"
-draft: false
+format: 
+    html: 
+        Code-Links:
+            - text: "Lab 1 Repository"
+              href: https://github.com/Rex-Josaphat/E155-LAB1
+              icon: github
 ---
 ## Introduction
 
@@ -16,7 +21,7 @@ The soldering process was straightforward except for the SMT components. It was 
 
 ## Experiment Setup
 
-The main task of the lab was to light up on-board LEDs and a MAN6480 seven-segment display using one of the DIP switch modules on the development board. This was to be done using SystemVerilog modules uploaded to the FPGA module on the board.
+The main task of the lab was to light up on-board LEDs and a HDSP-511A seven-segment display using one of the DIP switch modules on the development board. This was to be done using SystemVerilog modules uploaded to the FPGA module on the board.
 
 ### FPGA and MCU Testing 
 
@@ -36,7 +41,9 @@ After running the simulation, the full setup was installed on a breadboard to vi
 
 ![Figure 3: FPGA Experiment Wiring Setup](link)
 
-As seen from the schematic, the on-board LEDs are hooked up to $1k\Omega$ resistors and the 7-segment display to $100\Omega$ resistors to ensure reasonable current draw from the FPGA. 
+As seen from the schematic, the on-board LEDs are hooked up to $1k\Omega$ resistors and the 7-segment display to $100\Omega$ resistors to ensure reasonable(safe) current draw from the FPGA. 
+
+The 7-segment display LEDs have a typical forward voltage drop of $\approx2.00V$. The FPGA limits the total current draw to $200mA$. With a target current between $2-20mA$ to drive the LEDs, and the input voltage of $3.3V$ from the FPGA, I calculated the desired resistor values using $R = \frac{V_{\text{in}} - V_{f}}{I_{des}}$ obtaining that R should be between $65-650\Omega$. I opted for the modest $100\Omega$ which draws $13mA$ and is well within a range where the total current draw of the full display won't overwhelm the FPGA.
 
 ## Results and Discussion
 ### Testbench simulation
@@ -60,7 +67,7 @@ Using Radiant programmer, the code was uploaded to the FPGA to test the response
 ![Figure 8: example 2](link)
 
 ## Conclusion
-This lab took around 22 hours to complete but...
+This lab took around 22 hours to complete mainly because I had to go through a lot of debugging processes to ensure my hardware works and connect to the board. In the end, it turned out to be the issue that I assigned hardware pin constraint to one of the SPI pins which is used to connect to the FPGA. The lab was amazing overall and I was able to brush off from my skill earned in E85.
 
 ## AI Prototype Summary
 I used the new and updated LLM chatGPT 5.0 which is expected to be faster and smarter. After inputing the prompt, I received the following SystemVerilog code.
