@@ -6,6 +6,9 @@ project:
 website:
   title: "E155 Portfolio"
   navbar:
+    tools:
+      - icon: github
+        href: https://github.com/Rex-Josaphat
     left:
       - href: index.qmd
         text: Home

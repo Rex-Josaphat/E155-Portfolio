@@ -9,7 +9,7 @@ format:
 ---
 ## Introduction
 
-In this lab, an FPGA and MCU were installed on a development board setup and tested to verify proper functionality. First, the development board was built by soldering on each individual components following provided BOM, schematic, and the silkscreen on the provided PCB. 
+In this lab, an FPGA and MCU were installed on a development board setup and tested to verify proper functionality. The FPGA was later programmed to control a 7-segment display and a couple on-board LEDs based on a series of DIP switches. First, the development board was built by soldering on each individual components following  BOM, schematic, and the silkscreen on the provided PCB. 
 
 ## Development Board Setup
 
@@ -31,17 +31,17 @@ Using *Lattice Radiant* to program and upload the code to the FPGA, an onboard L
 
 ### FPGA Experiment Design
 
-The task was to test the board and operate a 7-segment display. To further test the board we had to drive two LEDs responding to the states of the four-DIP switch module. The first LED had to react to the first 2 DIP switches in a manner resembling an exclusive OR (XOR) gate. The second LED had to react to the last pair of DIP switches similar to an AND gate. These LEDs responded to their respective switch pair regardless of the other pair. The third LED to be controlled had to blink at about 2.4 Hz. This was done by leveraging the HSOSC module of the iCE40 Technology Library in Lattice Radiant. This allowed access to the on-board high speed oscillator providing 48MHz. Each cycle of third LED would last around 0.417 seconds meaning a full cycle requires around $\approx2*10^7$ ticks every second. With a 50% duty cycle it would take $10^7$ ticks for the half cycle. This logic was used to design a flip flop that switched the state of the LED every $10^7$ ticks (everytime the logic counter hit 10,000,000).
+To further test the board we had to drive two LEDs responding to the states of the four-DIP switch module. Based on the provided truth table, the first LED had to react to the first 2 DIP switches in a manner resembling an exclusive OR (XOR) gate. The second LED had to react to the last pair of DIP switches similar to an AND gate. These LEDs responded to their respective switch pair regardless of the other pair. The third LED to be controlled had to blink at about 2.4 Hz. This was done by leveraging the HSOSC module of the iCE40 Technology Library in Lattice Radiant. This allowed access to the on-board high speed oscillator providing 48MHz. Each cycle of third LED would last around 0.417 seconds meaning a full cycle requires around $\approx2*10^7$ ticks every second. With a 50% duty cycle it would take $10^7$ ticks for the half cycle. This logic was used to design a flip flop that switched the state of the LED every $10^7$ ticks (everytime the logic counter hit 10,000,000).
 
 The second task was to setup a 7-segment display to display a single hexadecimal digit specified the binary state of the 4 DIP switches (shown as `swDIP [3:0]` in the code). The segments of the display share a common anode that is to be powered by 3.3V from the FPGA. Therefore to turn on the segments, a logic 0 was applied to the segment cathode line. Since we have a 4-bit switch state, it meant we could display all hex digits from 0x0 to 0xF. The modules to control these elements were written in SystemVerilog to run on the FPGA and to ensure proper communication and signal control, they all followed the hierachy in the block diagram below:
 
-![Figure 2: Hierachical Block Diagram](images/lab1BlockDiagram.png){width=50%}
+![Figure 2: Hierachical Block Diagram](images/lab1BlockDiagram.png){width=60%}
 
 After running the simulation, the full setup was installed on a breadboard to visualize the actions of the on-board LEDs and to control the 7-segment display using the following schematic:
 
-![Figure 3: FPGA Experiment Wiring Setup](link)
+![Figure 3: FPGA Experiment Wiring Setup](images/lab1Schematic.png){width=60%}
 
-As seen from the schematic, the on-board LEDs are hooked up to $1k\Omega$ resistors and the 7-segment display to $100\Omega$ resistors to ensure reasonable(safe) current draw from the FPGA. 
+As seen from the schematic, the on-board LEDs are hooked up to $1k\Omega$ resistors and the 7-segment display to $100\Omega$ resistors to ensure reasonable (safe) current draw from the FPGA. 
 
 The 7-segment display LEDs have a typical forward voltage drop of $\approx2.00V$. The FPGA limits the total current draw to $200mA$. With a target current between $2-20mA$ to drive the LEDs, and the input voltage of $3.3V$ from the FPGA, I calculated the desired resistor values using $R = \frac{V_{\text{in}} - V_{f}}{I_{des}}$ obtaining that R should be between $65-650\Omega$. I opted for the modest $100\Omega$ which draws $13mA$ and is well within a range where the total current draw of the full display won't overwhelm the FPGA.
 
@@ -62,12 +62,12 @@ The blinking LED could not be visualized using an automated testbench, Figure 6 
 
 Using Radiant programmer, the code was uploaded to the FPGA to test the response of the on-board LEDs and the 7-segment display. The hardware responded properly as shown in the example figures below:
 
-![Figure 7: Hardware Execution Example 1 Showing Outputs to Switch Input 4b'1011](images/example1.jpg)
+![Figure 7: Hardware Execution Example 1 Showing Outputs to Switch Input 4b'1101](images/example1.jpg)
 
 ![Figure 7: Hardware Execution Example 1 Showing Outputs to Switch Input 4b'1001](images/example2.jpg)
 
 ## Conclusion
-This lab took around 22 hours to complete mainly because I had to go through a lot of debugging processes to ensure my hardware works and connect to the board. In the end, it turned out to be the issue that I assigned hardware pin constraint to one of the SPI pins which is used to connect to the FPGA. The lab was amazing overall and I was able to brush off from my skill earned in E85.
+This lab took around 22 hours to complete mainly because I had to go through a lot of debugging processes to ensure my hardware works and connect to the board. In the end, it turned out to be the issue that I assigned hardware pin constraint to one of the SPI pins (Pin 12) which is used to connect to the FPGA. The lab was amazing overall and I was able to brush up my skills earned in E85.
 
 ## AI Prototype Summary
 I used the new and updated LLM chatGPT 5.0 which is expected to be faster and smarter. After inputing the prompt, I received the following SystemVerilog code.
