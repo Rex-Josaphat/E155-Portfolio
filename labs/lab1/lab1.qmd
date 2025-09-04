@@ -35,11 +35,11 @@ To further test the board we had to drive two LEDs responding to the states of t
 
 The second task was to setup a 7-segment display to display a single hexadecimal digit specified the binary state of the 4 DIP switches (shown as `swDIP [3:0]` in the code). The segments of the display share a common anode that is to be powered by 3.3V from the FPGA. Therefore to turn on the segments, a logic 0 was applied to the segment cathode line. Since we have a 4-bit switch state, it meant we could display all hex digits from 0x0 to 0xF. The modules to control these elements were written in SystemVerilog to run on the FPGA and to ensure proper communication and signal control, they all followed the hierachy in the block diagram below:
 
-![Figure 2: Hierachical Block Diagram](images/lab1BlockDiagram.png){width=60%}
+![Figure 2: Hierachical Block Diagram](images/lab1BlockDiagram.png){width=80%}
 
 After running the simulation, the full setup was installed on a breadboard to visualize the actions of the on-board LEDs and to control the 7-segment display using the following schematic:
 
-![Figure 3: FPGA Experiment Wiring Setup](images/lab1Schematic.png){width=60%}
+![Figure 3: FPGA Experiment Wiring Setup](images/lab1Schematic.png){width=80%}
 
 As seen from the schematic, the on-board LEDs are hooked up to $1k\Omega$ resistors and the 7-segment display to $100\Omega$ resistors to ensure reasonable (safe) current draw from the FPGA. 
 
@@ -58,7 +58,7 @@ As shown from the simulation waves in Figures 4 and 5, the setup responded as ex
 ### Hardware Testing
 The blinking LED could not be visualized using an automated testbench, Figure 6 below shows the oscilloscope trace indicating the LED is blinking at the desired $2.4Hz$ and with a duty cycle of $50\%$.
 
-![Figure 6: Oscilloscope Trace Showing Blinking LED](images/oscilloscopeTrace.png){width="70%"}
+![Figure 6: Oscilloscope Trace Showing Blinking LED](images/oscilloscopeTrace.png){width="80%"}
 
 Using Radiant programmer, the code was uploaded to the FPGA to test the response of the on-board LEDs and the 7-segment display. The hardware responded properly as shown in the example figures below:
 
