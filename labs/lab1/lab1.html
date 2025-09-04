@@ -208,6 +208,7 @@ window.Quarto = {
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
+    <a href="https://github.com/Rex-Josaphat" title="" class="quarto-navigation-tool px-1" aria-label=""><i class="bi bi-github"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
@@ -236,7 +237,7 @@ window.Quarto = {
   <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
   <li><a href="#ai-prototype-summary" id="toc-ai-prototype-summary" class="nav-link" data-scroll-target="#ai-prototype-summary">AI Prototype Summary</a></li>
   </ul>
-</nav>
+<div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/Rex-Josaphat/E155-LAB1"><i class="bi bi-github"></i>Lab 1 Repository</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -262,7 +263,7 @@ window.Quarto = {
 
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>In this lab, an FPGA and MCU were installed on a development board setup and tested to verify proper functionality. First, the development board was built by soldering on each individual components following provided BOM, schematic, and the silkscreen on the provided PCB.</p>
+<p>In this lab, an FPGA and MCU were installed on a development board setup and tested to verify proper functionality. The FPGA was later programmed to control a 7-segment display and a couple on-board LEDs based on a series of DIP switches. First, the development board was built by soldering on each individual components following BOM, schematic, and the silkscreen on the provided PCB.</p>
 </section>
 <section id="development-board-setup" class="level2">
 <h2 class="anchored" data-anchor-id="development-board-setup">Development Board Setup</h2>
@@ -285,22 +286,22 @@ window.Quarto = {
 </section>
 <section id="fpga-experiment-design" class="level3">
 <h3 class="anchored" data-anchor-id="fpga-experiment-design">FPGA Experiment Design</h3>
-<p>The task was to test the board and operate a 7-segment display. To further test the board we had to drive two LEDs responding to the states of the four-DIP switch module. The first LED had to react to the first 2 DIP switches in a manner resembling an exclusive OR (XOR) gate. The second LED had to react to the last pair of DIP switches similar to an AND gate. These LEDs responded to their respective switch pair regardless of the other pair. The third LED to be controlled had to blink at about 2.4 Hz. This was done by leveraging the HSOSC module of the iCE40 Technology Library in Lattice Radiant. This allowed access to the on-board high speed oscillator providing 48MHz. Each cycle of third LED would last around 0.417 seconds meaning a full cycle requires around <span class="math inline">\(\approx2*10^7\)</span> ticks every second. With a 50% duty cycle it would take <span class="math inline">\(10^7\)</span> ticks for the half cycle. This logic was used to design a flip flop that switched the state of the LED every <span class="math inline">\(10^7\)</span> ticks (everytime the logic counter hit 10,000,000).</p>
+<p>To further test the board we had to drive two LEDs responding to the states of the four-DIP switch module. Based on the provided truth table, the first LED had to react to the first 2 DIP switches in a manner resembling an exclusive OR (XOR) gate. The second LED had to react to the last pair of DIP switches similar to an AND gate. These LEDs responded to their respective switch pair regardless of the other pair. The third LED to be controlled had to blink at about 2.4 Hz. This was done by leveraging the HSOSC module of the iCE40 Technology Library in Lattice Radiant. This allowed access to the on-board high speed oscillator providing 48MHz. Each cycle of third LED would last around 0.417 seconds meaning a full cycle requires around <span class="math inline">\(\approx2*10^7\)</span> ticks every second. With a 50% duty cycle it would take <span class="math inline">\(10^7\)</span> ticks for the half cycle. This logic was used to design a flip flop that switched the state of the LED every <span class="math inline">\(10^7\)</span> ticks (everytime the logic counter hit 10,000,000).</p>
 <p>The second task was to setup a 7-segment display to display a single hexadecimal digit specified the binary state of the 4 DIP switches (shown as <code>swDIP [3:0]</code> in the code). The segments of the display share a common anode that is to be powered by 3.3V from the FPGA. Therefore to turn on the segments, a logic 0 was applied to the segment cathode line. Since we have a 4-bit switch state, it meant we could display all hex digits from 0x0 to 0xF. The modules to control these elements were written in SystemVerilog to run on the FPGA and to ensure proper communication and signal control, they all followed the hierachy in the block diagram below:</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="images/lab1BlockDiagram.png" class="img-fluid figure-img" style="width:50.0%"></p>
+<p><img src="images/lab1BlockDiagram.png" class="img-fluid figure-img" style="width:60.0%"></p>
 <figcaption>Figure 2: Hierachical Block Diagram</figcaption>
 </figure>
 </div>
 <p>After running the simulation, the full setup was installed on a breadboard to visualize the actions of the on-board LEDs and to control the 7-segment display using the following schematic:</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="link.png" class="img-fluid figure-img"></p>
+<p><img src="images/lab1Schematic.png" class="img-fluid figure-img" style="width:60.0%"></p>
 <figcaption>Figure 3: FPGA Experiment Wiring Setup</figcaption>
 </figure>
 </div>
-<p>As seen from the schematic, the on-board LEDs are hooked up to <span class="math inline">\(1k\Omega\)</span> resistors and the 7-segment display to <span class="math inline">\(100\Omega\)</span> resistors to ensure reasonable(safe) current draw from the FPGA.</p>
+<p>As seen from the schematic, the on-board LEDs are hooked up to <span class="math inline">\(1k\Omega\)</span> resistors and the 7-segment display to <span class="math inline">\(100\Omega\)</span> resistors to ensure reasonable (safe) current draw from the FPGA.</p>
 <p>The 7-segment display LEDs have a typical forward voltage drop of <span class="math inline">\(\approx2.00V\)</span>. The FPGA limits the total current draw to <span class="math inline">\(200mA\)</span>. With a target current between <span class="math inline">\(2-20mA\)</span> to drive the LEDs, and the input voltage of <span class="math inline">\(3.3V\)</span> from the FPGA, I calculated the desired resistor values using <span class="math inline">\(R = \frac{V_{\text{in}} - V_{f}}{I_{des}}\)</span> obtaining that R should be between <span class="math inline">\(65-650\Omega\)</span>. I opted for the modest <span class="math inline">\(100\Omega\)</span> which draws <span class="math inline">\(13mA\)</span> and is well within a range where the total current draw of the full display won’t overwhelm the FPGA.</p>
 </section>
 </section>
@@ -336,7 +337,7 @@ window.Quarto = {
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/example1.jpg" class="img-fluid figure-img"></p>
-<figcaption>Figure 7: Hardware Execution Example 1 Showing Outputs to Switch Input 4b’1011</figcaption>
+<figcaption>Figure 7: Hardware Execution Example 1 Showing Outputs to Switch Input 4b’1101</figcaption>
 </figure>
 </div>
 <div class="quarto-figure quarto-figure-center">
@@ -349,7 +350,7 @@ window.Quarto = {
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
-<p>This lab took around 22 hours to complete mainly because I had to go through a lot of debugging processes to ensure my hardware works and connect to the board. In the end, it turned out to be the issue that I assigned hardware pin constraint to one of the SPI pins which is used to connect to the FPGA. The lab was amazing overall and I was able to brush off from my skill earned in E85.</p>
+<p>This lab took around 22 hours to complete mainly because I had to go through a lot of debugging processes to ensure my hardware works and connect to the board. In the end, it turned out to be the issue that I assigned hardware pin constraint to one of the SPI pins (Pin 12) which is used to connect to the FPGA. The lab was amazing overall and I was able to brush up my skills earned in E85.</p>
 </section>
 <section id="ai-prototype-summary" class="level2">
 <h2 class="anchored" data-anchor-id="ai-prototype-summary">AI Prototype Summary</h2>
