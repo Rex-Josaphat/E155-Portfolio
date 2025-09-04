@@ -64,7 +64,7 @@ Using Radiant programmer, the code was uploaded to the FPGA to test the response
 
 ![Figure 7: Hardware Execution Example 1 Showing Outputs to Switch Input 4b'1101](images/example1.jpg)
 
-![Figure 7: Hardware Execution Example 1 Showing Outputs to Switch Input 4b'1001](images/example2.jpg)
+![Figure 8: Hardware Execution Example 1 Showing Outputs to Switch Input 4b'1001](images/example2.jpg)
 
 ## Conclusion
 This lab took around 22 hours to complete mainly because I had to go through a lot of debugging processes to ensure my hardware works and connect to the board. In the end, it turned out to be the issue that I assigned hardware pin constraint to one of the SPI pins (Pin 12) which is used to connect to the FPGA. The lab was amazing overall and I was able to brush up my skills earned in E85.
