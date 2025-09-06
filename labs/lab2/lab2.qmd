@@ -1,5 +1,25 @@
 ---
 title: "E155 Lab 2: Multiplexed 7-Segment Display"
-draft: false
+format:
+  html:
+    code-links:
+      - text: "Lab 2 Repository"
+        href: https://github.com/Rex-Josaphat/E155-LAB2
+        icon: github
 ---
 ## Introduction
+
+## Experiment Setup
+
+### Time-multiplexing Logic
+The human eye can detect flickering up to $\sim60 Hz (around 16.67 ms per cycle)$. With two digits, each must be active at least 120 switches per second (60Hz * 2). This means my logic had to switch every $\sim8.3 ms$ or less.
+I opted to switch at every $2 ms$ which gives a $250 Hz$ refresh rate, too fast for the human eye to detect.
+
+## Results and Discussion
+### Testbench simulation
+
+![Figure : QuestaSim Screenshot Showing Experiment Simulation Outputs and Expected Outputs](link)
+
+### Hardware Testing
+
+## Conclusion
