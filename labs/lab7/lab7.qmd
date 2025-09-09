@@ -1,5 +1,14 @@
 ---
 title: "E155 Lab 7: The Advanced Encryption Standard"
-draft: false
+format:
+  html:
+    other-links: 
+      - text: "Lab 6 Class Overview"
+        href: https://hmc-e155.github.io/lab/lab6/
+        icon: info-circle   
+    code-links:
+      - text: "Lab 6 Repository"
+        href: https://github.com/Rex-Josaphat/E155-LAB6
+        icon: github
 ---
 ## Introduction

@@ -1,5 +1,14 @@
 ---
 title: "E155 Lab 3: Keypad Scanner"
-draft: false
+format:
+  html:
+    other-links: 
+      - text: "Lab 3 Class Overview"
+        href: https://hmc-e155.github.io/lab/lab3/
+        icon: info-circle   
+    code-links:
+      - text: "Lab 3 Repository"
+        href: https://github.com/Rex-Josaphat/E155-LAB3
+        icon: github
 ---
 ## Introduction

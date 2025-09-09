@@ -1,5 +1,14 @@
 ---
 title: "E155 Lab 5: Interrupts"
-draft: false
+format:
+  html:
+    other-links: 
+      - text: "Lab 5 Class Overview"
+        href: https://hmc-e155.github.io/lab/lab5/
+        icon: info-circle   
+    code-links:
+      - text: "Lab 5 Repository"
+        href: https://github.com/Rex-Josaphat/E155-LAB5
+        icon: github
 ---
 ## Introduction

@@ -2,6 +2,10 @@
 title: 'E155 Lab 1: FPGA and MCU Setup and Testing'
 format:
   html:
+    other-links: 
+      - text: "Lab 1 Class Overview"
+        href: https://hmc-e155.github.io/lab/lab1/
+        icon: info-circle      
     code-links:
       - text: "Lab 1 Repository"
         href: https://github.com/Rex-Josaphat/E155-LAB1

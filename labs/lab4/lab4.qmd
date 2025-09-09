@@ -1,5 +1,14 @@
 ---
 title: "E155 Lab 4: Digital Audio"
-draft: false
+format:
+  html:
+    other-links: 
+      - text: "Lab 4 Class Overview"
+        href: https://hmc-e155.github.io/lab/lab4/
+        icon: info-circle   
+    code-links:
+      - text: "Lab 4 Repository"
+        href: https://github.com/Rex-Josaphat/E155-LAB4
+        icon: github
 ---
 ## Introduction
