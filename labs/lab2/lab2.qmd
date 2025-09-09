@@ -9,17 +9,58 @@ format:
 ---
 ## Introduction
 
-## Experiment Setup
+In this lab the FPGA was used to drive a Dual 7-segment display with the goal to demonstrate time multiplexing and how to efficiently use the I/O on our FPGA.
+
+## Experiment Setup and Design Overview
+
+The main task for the lab was to control the provided HDSP-521A dual 7-Segment display using only 7 pins from our FPGA. The FPGA received two different switch inputs from two different switch blocks, each meant to drive a specific 7-segment display. With limited hardware, the dual 7-segment pins had to share FPGA pins to drive the respective segment displaying the hex equivalent of the switch binary input. The FPGA outputted enablers meant to choose which display has to turn on by driving the respective common anodes HIGH. Each display responded to a respective switch block. Two 2N3906 PNP transistors were used to help drive large currents to the common anodes so as to avoid excessive current draw from the FPGA. An extra task was to show the sum of the two displayed digits using LEDs. These LEDs were also driven by the I/O pins from the FPGA.
 
 ### Time-multiplexing Logic
-The human eye can detect flickering up to $\sim60 Hz (around 16.67 ms per cycle)$. With two digits, each must be active at least 120 switches per second (60Hz * 2). This means my logic had to switch every $\sim8.3 ms$ or less.
-I opted to switch at every $2 ms$ which gives a $250 Hz$ refresh rate, too fast for the human eye to detect.
+
+Turning on 2 displays that share pins meant that we had to switch so fast that the two displays appear as if they are on at the same time wihout any flickering observed between them. To do this time multiplexing was used. Time multiplexing is a method in digital logic where different elements share common hardware resources for different purposes at different times. We had to implement a timing logic to achieve this task.
+
+The human eye can detect flickering up to $\sim60 Hz$ (around $16.67 ms$ per cycle). With two digits, this would mean that each must be active for at least 120 switches per second (60Hz * 2). To ensure "no flickering" switching between the two displays had to be every $\sim8.3 ms$ or less. I opted to switch at every $4 ms$ which gives a $250 Hz$ refresh rate (switching every $2*10^5$ ticks), which is too fast for the human eye to detect. The module doing the switching leveraged the on-board high-speed oscillator as a clock frequency and used it to implement a counter that switched at the specified times. 
+
+### Display and LED Control Logic
+
+After evey switching a specific display anode high using a 2-bit signal, `onSeg[1:0]`, where MSB showed the state of the left display and LSB, the right display. This signal was multiplexed and used to select which switch input to send to the display that was activated. The left display was controlled by the on-board DIP switch module (`sW1[3:0]`), while the right one was controlled by the DIP switch component on the breadboard (`sW2[3:0]`). The selected input was sent to the dual 7-segment display to display the respective digit using the combinational logic module designed in LAB1. 
+
+The sum of the displayed numbers was calculated by simply performing binary addition of the two 4-bit switch inputs producing a 5-bit output. Each bit of the sum was relayed to a specific LED, giving us 5 different LEDs to show the binary representation of the sum. The modules to control these elements were written in SystemVerilog to run on the FPGA and to ensure proper communication and signal control, they all followed the hierachy in the block diagram below:
+
+![Figure 1: Hierachical Block Diagram](images/lab2BlockDiagram.png)
+
+After running the simulation ensuring modules work as expected, the full setup was installed on a breadboard to control the dual 7-segment display and sum LEDs using the following schematic:
+
+![Figure 2: FPGA Experiment Wiring Setup](images/lab2Schematic.png)
+
+As seen from the schematic, the sum LEDs are hooked up to $1\Omega$ resistors and the 7-segment display to $100\Omega$ resistors to ensure reasonable (safe) current draw from the FPGA. 
+
+Current calculation yap!!!!!
 
 ## Results and Discussion
 ### Testbench simulation
 
-![Figure : QuestaSim Screenshot Showing Experiment Simulation Outputs and Expected Outputs](link)
+Setting up the simulation was challenging due to the fact that the time multiplexing counter went on for too many cycles that the assert statements would finish before any switching was done making it hard to test the time multiplexing logic. 
+
+My first attempt was to create a fast clock so that counting happens so fast and could see switching. I adjusted my timescale to ``timescale 1ns/1ps` allowing me to create a clock with period of $0.2ns$ ($50GHz$). This didn't work as good because the simulation had to run for as long as $200ms$ just to see a switch cycle. My final solution was to implemenet a parameter `SWITCH_COUNT` which allowed me to control the number of ticks outside the `ledControl` module. In my testbench I set `SWITCH_COUNT = 1` which essentially switched enablers after 1 tick, equivalent to switching every clock cycle which solved my issue. Each module was simulated individually and running the simulation yielded the following waves:
+
+![Figure 3: QuestaSim Screenshot Showing Time Multiplexing and LED Sum Simulation Outputs](link)
+
+The waves in Figure 3 above show that the the two displays turn on at different times as `onSeg[1]` and `onSeg[1]` oscillate oppositely. The waves shows that `sevenSegIn` chooses `sW1` switch input when `onSeg[1]` is HIGH and `sW1` input when switch `onSeg[0]` is HIGH showing the time multiplexing logic works. The LED sum also worked properly and was verified using the assert statement, executing all with no error returned.
+
+![Figure 4: QuestaSim Screenshot Showing Seven-segment Display Simulation Outputs and Expected Outputs](images/7segDisp_tb.png)
+
+The seven segment display also resopnds as expected.
 
 ### Hardware Testing
 
+All components were collected and assembled on an extended breadboard following the schematic in Figure 2. Using Radiant programmer, the code was uploaded to the FPGA to test the time multiplexing logic, the sum LEDs, and the 7-segment display. The hardware responded properly as shown in the example figures below:
+
+![Figure 5: Hardware Execution Example 2 Showing Outputs to Switch Inputs 4'b1111 and 4'b1110](link)
+
+![Figure 6: Hardware Execution Example 2 Showing Outputs to Switch Inputs 4'b1001 and 4'b0010](link)
+
 ## Conclusion
+This lab took around 15 hours to complete mainly because I had to go through a lot of debugging processes to fix and setup my testbench to properly illustrate time multiplexing. I solved the issue by learning how to deal with timing and synchronization issues and implementing a solution to modify the counter divider in my testbench. The lab was amazing overall and I learnt about time-multiplexing, a skill I believe will be useful in the future labs and projects of this class.
+
+## AI Prototype Summary
