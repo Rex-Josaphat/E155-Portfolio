@@ -76,6 +76,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../../site_libs/bootstrap/bootstrap-e31584831b205ffbb2d98406f31c2a5b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -289,7 +292,8 @@ window.Quarto = {
 <figcaption>Figure 2: FPGA Experiment Wiring Setup</figcaption>
 </figure>
 </div>
-<p>As seen from the schematic, the sum LEDs are hooked up to <span class="math inline">\(1\Omega\)</span> resistors and the 7-segment display to <span class="math inline">\(200\Omega\)</span> resistors to ensure reasonable (safe) current draw from the FPGA. The 7-segment display LEDs have a typical forward voltage drop of <span class="math inline">\(\approx1.80V\)</span>. The target current draw per segment was <span class="math inline">\(8mA\)</span> and the input voltage of <span class="math inline">\(3.3V\)</span> from the FPGA, I calculated the desired resistor values using <span class="math inline">\(R = \frac{V_{\text{in}} - V_{f}}{I_{des}}\)</span> obtaining that R should be <span class="math inline">\(\sim200\Omega\)</span> where worst case scenario with all 14 segments on, the total load current is <span class="math inline">\(112mA\)</span>, much below FPGA rated max. Similar calculation was used for transistors with <span class="math inline">\(V_{CE}\approx0.7V\)</span> and a target <span class="math inline">\(I_{BC}\approx8mA\)</span>, and the red sum LEDs with <span class="math inline">\(V_F=1.8\)</span> and target current around <span class="math inline">\(15mA\)</span>. This gives <span class="math inline">\(\sim330\Omega\)</span> and <span class="math inline">\(100\Omega\)</span> for the transistors and sum LEDs respectively.</p>
+<p>As seen from the schematic, the sum LEDs are hooked up to <span class="math inline">\(100\Omega\)</span> resistors and the 7-segment display to <span class="math inline">\(200\Omega\)</span> resistors to ensure reasonable (safe) current draw from the FPGA.</p>
+<p>The 7-segment display LEDs have a typical forward voltage drop of <span class="math inline">\(\approx1.70V\)</span>. The target current draw per segment was <span class="math inline">\(8mA\)</span> and the input voltage of <span class="math inline">\(3.3V\)</span> from the FPGA, I calculated the desired resistor values using <span class="math inline">\(R = \frac{V_{\text{in}} - V_{f}}{I_{des}}\)</span> obtaining that R should be <span class="math inline">\(\sim200\Omega\)</span> where worst case scenario with all 14 segments on, the total load current is <span class="math inline">\(112mA\)</span>, much below FPGA rated max. Similar calculation was used for transistors with <span class="math inline">\(V_{CE}\approx0.7V\)</span> and a target <span class="math inline">\(I_{BC}\approx8mA\)</span>, and the red sum LEDs with <span class="math inline">\(V_F=1.80\)</span> and target current around <span class="math inline">\(15mA\)</span>. This gives <span class="math inline">\(\sim330\Omega\)</span> and <span class="math inline">\(100\Omega\)</span> for the transistors and sum LEDs respectively.</p>
 </section>
 </section>
 <section id="results-and-discussion" class="level2">
@@ -300,13 +304,13 @@ window.Quarto = {
 <p>My first attempt was to create a fast clock so that counting happens so fast and could see switching. I adjusted my timescale to `<code>timescale 1ns/1ps</code> allowing me to create a clock with period of <span class="math inline">\(0.2ns\)</span> (<span class="math inline">\(50GHz\)</span>). This didn’t work as good because the simulation had to run for as long as <span class="math inline">\(200ms\)</span> just to see a switch cycle. My final solution was to implemenet a parameter <code>SWITCH_COUNT</code> which allowed me to control the number of ticks outside the <code>ledControl</code> module. In my testbench I set <code>SWITCH_COUNT = 1</code> which essentially switched enablers after 1 tick, equivalent to switching every clock cycle which solved my issue. Each module was simulated individually and running the simulation yielded the following waves:</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="images/exampleWaves.png" class="img-fluid figure-img"></p>
+<p><a href="images/exampleWaves.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure 3: QuestaSim Screenshot Showing Time Multiplexing and LED Sum Simulation Outputs"><img src="images/exampleWaves.png" class="img-fluid figure-img" alt="Figure 3: QuestaSim Screenshot Showing Time Multiplexing and LED Sum Simulation Outputs"></a></p>
 <figcaption>Figure 3: QuestaSim Screenshot Showing Time Multiplexing and LED Sum Simulation Outputs</figcaption>
 </figure>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="images/fullTestWaves.png" class="img-fluid figure-img"></p>
+<p><a href="images/fullTestWaves.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure 4: QuestaSim Screenshot Showing Waves For All 256 Possible Cases"><img src="images/fullTestWaves.png" class="img-fluid figure-img" alt="Figure 4: QuestaSim Screenshot Showing Waves For All 256 Possible Cases"></a></p>
 <figcaption>Figure 4: QuestaSim Screenshot Showing Waves For All 256 Possible Cases</figcaption>
 </figure>
 </div>
@@ -332,7 +336,7 @@ window.Quarto = {
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
-<p>This lab took around 25 hours to complete mainly because I had to go through a lot of debugging processes to fix and setup my testbench to properly illustrate time multiplexing. I solved the issue by learning how to deal with timing and synchronization issues and implementing a solution to modify the counter divider in my testbench. Another major issue was bleeding between the two displays which was caused by faulty adapter and FPGA pins. I had to resolder all of them as a temporary fix but will look deeper into the issue. The lab was amazing overall and I learnt about time-multiplexing, a skill I believe will be useful in the future labs and projects of this class.</p>
+<p>This lab took around 25 hours to complete mainly because I had to go through a lot of debugging processes to fix and setup my testbench to properly illustrate time multiplexing. I solved the issue by learning how to deal with timing and synchronization issues and implementing a solution to modify the counter divider in my testbench. Another major issue was bleeding between the two displays which was caused by faulty adapter and FPGA pins probably damaged or due to poor soldering. I had to resolder most of them as a temporary fix but will look deeper into the issue as the bleeding is at its lowest but not completely gone. The lab was amazing overall and I learnt about time-multiplexing, a skill I believe will be useful in the future labs and projects of this class.</p>
 </section>
 <section id="ai-prototype-summary" class="level2">
 <h2 class="anchored" data-anchor-id="ai-prototype-summary">AI Prototype Summary</h2>
@@ -882,6 +886,38 @@ window.Quarto = {
   });
   </script>
 </div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
 
 
 
