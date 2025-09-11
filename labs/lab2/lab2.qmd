@@ -37,8 +37,9 @@ After running the simulation ensuring modules work as expected, the full setup w
 
 ![Figure 2: FPGA Experiment Wiring Setup](images/lab2Schematic.png)
 
-As seen from the schematic, the sum LEDs are hooked up to $1\Omega$ resistors and the 7-segment display to $200\Omega$ resistors to ensure reasonable (safe) current draw from the FPGA. 
-The 7-segment display LEDs have a typical forward voltage drop of $\approx1.80V$. The target current draw per segment was $8mA$ and the input voltage of $3.3V$ from the FPGA, I calculated the desired resistor values using $R = \frac{V_{\text{in}} - V_{f}}{I_{des}}$ obtaining that R should be $\sim200\Omega$ where worst case scenario with all 14 segments on, the total load current is $112mA$, much below FPGA rated max. Similar calculation was used for transistors with $V_{CE}\approx0.7V$ and a target $I_{BC}\approx8mA$, and the red sum LEDs with $V_F=1.8$ and target current around $15mA$. This gives $\sim330\Omega$ and $100\Omega$ for the transistors and sum LEDs respectively.
+As seen from the schematic, the sum LEDs are hooked up to $100\Omega$ resistors and the 7-segment display to $200\Omega$ resistors to ensure reasonable (safe) current draw from the FPGA. 
+
+The 7-segment display LEDs have a typical forward voltage drop of $\approx1.70V$. The target current draw per segment was $8mA$ and the input voltage of $3.3V$ from the FPGA, I calculated the desired resistor values using $R = \frac{V_{\text{in}} - V_{f}}{I_{des}}$ obtaining that R should be $\sim200\Omega$ where worst case scenario with all 14 segments on, the total load current is $112mA$, much below FPGA rated max. Similar calculation was used for transistors with $V_{CE}\approx0.7V$ and a target $I_{BC}\approx8mA$, and the red sum LEDs with $V_F=1.80$ and target current around $15mA$. This gives $\sim330\Omega$ and $100\Omega$ for the transistors and sum LEDs respectively.
 
 ## Results and Discussion
 ### Testbench simulation
@@ -47,9 +48,10 @@ Setting up the simulation was challenging due to the fact that the time multiple
 
 My first attempt was to create a fast clock so that counting happens so fast and could see switching. I adjusted my timescale to ``timescale 1ns/1ps` allowing me to create a clock with period of $0.2ns$ ($50GHz$). This didn't work as good because the simulation had to run for as long as $200ms$ just to see a switch cycle. My final solution was to implemenet a parameter `SWITCH_COUNT` which allowed me to control the number of ticks outside the `ledControl` module. In my testbench I set `SWITCH_COUNT = 1` which essentially switched enablers after 1 tick, equivalent to switching every clock cycle which solved my issue. Each module was simulated individually and running the simulation yielded the following waves:
 
-![Figure 3: QuestaSim Screenshot Showing Time Multiplexing and LED Sum Simulation Outputs](images/exampleWaves.png)
+![Figure 3: QuestaSim Screenshot Showing Time Multiplexing and LED Sum Simulation Outputs](images/exampleWaves.png){.lightbox}
 
-![Figure 4: QuestaSim Screenshot Showing Waves For All 256 Possible Cases](images/fullTestWaves.png)
+
+![Figure 4: QuestaSim Screenshot Showing Waves For All 256 Possible Cases](images/fullTestWaves.png){.lightbox}
 
 The waves in Figure 3 above show that the the two displays turn on at different times as `onSeg[1]` and `onSeg[1]` oscillate oppositely. The waves shows that `sevenSegIn` chooses `sW1` switch input when `onSeg[1]` is HIGH and `sW1` input when switch `onSeg[0]` is HIGH showing the time multiplexing logic works. The LED sum also worked properly and was verified using the assert statement, executing all with no error returned.
 
@@ -64,7 +66,7 @@ All components were collected and assembled on an extended breadboard following 
 ![Figure 6: Hardware Execution Example Showing Outputs to Different Switch Inputs](images/lab2Demo.mp4)
 
 ## Conclusion
-This lab took around 25 hours to complete mainly because I had to go through a lot of debugging processes to fix and setup my testbench to properly illustrate time multiplexing. I solved the issue by learning how to deal with timing and synchronization issues and implementing a solution to modify the counter divider in my testbench. Another major issue was bleeding between the two displays which was caused by faulty adapter and FPGA pins. I had to resolder all of them as a temporary fix but will look deeper into the issue. The lab was amazing overall and I learnt about time-multiplexing, a skill I believe will be useful in the future labs and projects of this class.
+This lab took around 25 hours to complete mainly because I had to go through a lot of debugging processes to fix and setup my testbench to properly illustrate time multiplexing. I solved the issue by learning how to deal with timing and synchronization issues and implementing a solution to modify the counter divider in my testbench. Another major issue was bleeding between the two displays which was caused by faulty adapter and FPGA pins probably damaged or due to poor soldering. I had to resolder most of them as a temporary fix but will look deeper into the issue as the bleeding is at its lowest but not completely gone. The lab was amazing overall and I learnt about time-multiplexing, a skill I believe will be useful in the future labs and projects of this class.
 
 ## AI Prototype Summary
 I used Chatgpt 5 to run the prompt and it gave me the code below. The code was good except that syntheis didn't work as the LLM was running a line ``default_nettype none` meant to set the global net parameter to none until all net parameters are specifically defined. Radiant wasn't happy with that and as usual the LLM faught until it accepted that the best solution is to remove the line producing the next code that synthesized:

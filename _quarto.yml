@@ -43,4 +43,5 @@ format:
     link-external-newwindow: true
     include-in-header:
       - favicon.html
-
+filters:
+  - lightbox
