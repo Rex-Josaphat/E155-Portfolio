@@ -12,3 +12,60 @@ format:
         icon: github
 ---
 ## Introduction
+
+In the FPGA was used to read inputs from a 4x4 matrix keypad, and drive the decoded inputs on a dual 7-segment display. The main purpose of this lab was to learn how to deal with timing issues within logic when combining asynchronous and synchronous inputs and data. The lab also leveraged the time-multiplexing logic explored in last week's lab.
+
+## Experiment Setup and Design Overview
+
+The FPGA received hexadecimal inputs from the keypad. The two last digits had to be displayed on the HDSP-521A dual 7-Segment display with the most recent entry appearing on the right display. The design had to follow a couple consntraits such as: the design should not lock up when multiple buttons are pressed; only the first keypress should be regustered, and most of all, there should be no switch bouncing. To implement this logic, I had to design a Finite State Machine (FSM) that handles detection and scanning of keypad inputs which are to be decoded and shown on the display.
+
+### Keypad FSM Logic
+
+The finite state machine read the input from the keypad scanner, which were logic highs from the respective column of the pressed button. The FSM would continuously power one row of the scanner at a time until a button was pressed, connecting a row to a column and powering one of the column bits. When the FSM thinks it found a keypress (e.g. in states `S1`, `S4`, `S7`, `S10`), instead of continuing to scan one row at a time, it drives all rows high simultaneously. That way, the pressed key’s column will stay HIGH no matter which row I would have moved to next. This essentially locks the keypad electrically while I confirm the press. The column line for the pressed key never drops back low just because you moved to another row, which ensures my debounce logic has a stable input.
+
+The FSM logic has 4 scan states:  `S0`, `S3`, `S6`, and `S9` corresponding to the 4 rows, which allow the FSM to scan aroung as it powers an individual row. Once a key press is detected, the FSM jumps inot the candidate states:  `S1`, `S4`, `S7`, or `S10` where all rows are driven high. Sampling occurs in these rows where the FSM waits and see if a key is valid. In case the key is invalid, such as due to bouncing, the FSM jumps back to scanning all rows. If the key is indeed valid (properly debounced) the FSM jumps into the hold states:  `S2`, `S5`, `S6`, or `S11` and stays there until the key is released and goes back to scanning. 
+
+One-hot logic implementation if needed......
+
+### Synchronization and Switch Debouncing
+
+The 
+
+The modules to control these elements were written in SystemVerilog to run on the FPGA and to ensure proper communication and signal control, they all followed the hierachy in the block diagram below:
+
+![Figure 1: Hierachical Block Diagram](images/lab3BlockDiagram.png)
+
+After running the simulation ensuring modules work as expected, the full setup was installed on a breadboard to control the dual 7-segment display and sum LEDs using the following schematic:
+
+![Figure 2: FPGA Experiment Wiring Setup](images/lab3Schematic.png)
+
+As seen from the schematic, the keypad columns are hooked up to $10k\Omega$ resistors and the 7-segment display to $200\Omega$ resistors to ensure reasonable (safe) current draw from the FPGA. 
+
+The 7-segment display LEDs have a typical forward voltage drop of $\approx1.70V$. The target current draw per segment was $8mA$ and the input voltage of $3.3V$ from the FPGA. The 2N3906 transistors used have $V_{\text{CESAT}}=0.2V$. I calculated the desired resistor values using $R = \frac{V_{\text{in}} - V_{f} - V_{\text{CESAT}}}{I_{des}}$ obtaining that R should be $\sim200\Omega$ where worst case scenario with all 14 segments on, the total load current is $112mA$, much below FPGA rated max. Similar calculation was used for transistors with $V_{CE}\approx0.7V$ and a target $I_{BC}\approx8mA$, and the red sum LEDs with $V_F=1.80$ and target current around $15mA$. This gives $\sim330\Omega$ and $100\Omega$ for the transistors and sum LEDs respectively.
+
+## Results and Discussion
+### Testbench simulation
+
+
+
+![Figure 3: QuestaSim Screenshot Showing ](link){.lightbox}
+
+
+![Figure 4: QuestaSim Screenshot Showing Waves ](link){.lightbox}
+
+
+
+![Figure 4: QuestaSim Screenshot Showing Seven-segment Display Simulation Outputs and Expected Outputs](images/7segDisp_tb.png)
+
+The seven segment display also resopnds as expected.
+
+### Hardware Testing
+
+All components were collected and assembled on an extended breadboard following the schematic in Figure 3. Using Radiant programmer, the code was uploaded to the FPGA to test the keypad responses, proper timing and FSM logic, and the 7-segment display. The hardware responded properly as shown in the example video below:
+
+![Figure 6: Hardware Execution Example Showing Outputs to Different Keypad Presses](link)
+
+## Conclusion
+This lab took around 
+
+## AI Prototype Summary
