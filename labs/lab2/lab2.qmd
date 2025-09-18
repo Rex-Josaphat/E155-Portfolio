@@ -53,7 +53,7 @@ My first attempt was to create a fast clock so that counting happens so fast and
 
 ![Figure 4: QuestaSim Screenshot Showing Waves For All 256 Possible Cases](images/fullTestWaves.png){.lightbox}
 
-The waves in Figure 3 above show that the the two displays turn on at different times as `onSeg[1]` and `onSeg[1]` oscillate oppositely. The waves shows that `sevenSegIn` chooses `sW1` switch input when `onSeg[1]` is HIGH and `sW1` input when switch `onSeg[0]` is HIGH showing the time multiplexing logic works. The LED sum also worked properly and was verified using the assert statement, executing all with no error returned.
+The waves in Figure 3 above show that the the two displays turn on at different times as `onSeg[1]` and `onSeg[1]` oscillate oppositely. The waves shows that `sevenSegIn` chooses `sW1` switch input when `onSeg[1]` is HIGH and `sW2` input when switch `onSeg[0]` is HIGH showing the time multiplexing logic works. The LED sum also worked properly and was verified using the assert statement, executing all with no error returned.
 
 ![Figure 4: QuestaSim Screenshot Showing Seven-segment Display Simulation Outputs and Expected Outputs](images/7segDisp_tb.png)
 

@@ -13,31 +13,38 @@ format:
 ---
 ## Introduction
 
-In the FPGA was used to read inputs from a 4x4 matrix keypad, and drive the decoded inputs on a dual 7-segment display. The main purpose of this lab was to learn how to deal with timing issues within logic when combining asynchronous and synchronous inputs and data. The lab also leveraged the time-multiplexing logic explored in last week's lab.
+In this lab, the FPGA was used to read inputs from a 4x4 matrix keypad, and drive the decoded inputs on a dual 7-segment display. The main purpose of this lab was to learn how to deal with timing issues within logic when combining asynchronous and synchronous inputs and data. The lab also leveraged the time-multiplexing logic explored in last week's lab.
 
 ## Experiment Setup and Design Overview
 
-The FPGA received hexadecimal inputs from the keypad. The two last digits had to be displayed on the HDSP-521A dual 7-Segment display with the most recent entry appearing on the right display. The design had to follow a couple consntraits such as: the design should not lock up when multiple buttons are pressed; only the first keypress should be regustered, and most of all, there should be no switch bouncing. To implement this logic, I had to design a Finite State Machine (FSM) that handles detection and scanning of keypad inputs which are to be decoded and shown on the display.
+The FPGA received hexadecimal inputs from the keypad. The two last digits had to be displayed on the HDSP-521A dual 7-Segment display with the most recent entry appearing on the right display. The design had to follow a couple consntraits such as: the design should lock up current numbers when multiple buttons are pressed; only the first keypress should be registered, and most of all, there should be no switch bouncing. To implement this logic, I had to design a Finite State Machine (FSM) that handles detection and scanning of keypad inputs which are to be decoded and shown on the display.
 
 ### Keypad FSM Logic
 
-The finite state machine read the input from the keypad scanner, which were logic highs from the respective column of the pressed button. The FSM would continuously power one row of the scanner at a time until a button was pressed, connecting a row to a column and powering one of the column bits. When the FSM thinks it found a keypress (e.g. in states `S1`, `S4`, `S7`, `S10`), instead of continuing to scan one row at a time, it drives all rows high simultaneously. That way, the pressed key’s column will stay HIGH no matter which row I would have moved to next. This essentially locks the keypad electrically while I confirm the press. The column line for the pressed key never drops back low just because you moved to another row, which ensures my debounce logic has a stable input.
+The finite state machine read the input from the keypad scanner, which were logic highs from the respective column of the pressed button. The FSM would continuously power one row of the scanner at a time until a button was pressed, connecting a row to a column and powering one of the column bits. My logic utilized a mealy FSM featuring a total of 12 states with each of the 4 rows attributed to 3 individual states serving a specific purpose as shown below:
 
-The FSM logic has 4 scan states:  `S0`, `S3`, `S6`, and `S9` corresponding to the 4 rows, which allow the FSM to scan aroung as it powers an individual row. Once a key press is detected, the FSM jumps inot the candidate states:  `S1`, `S4`, `S7`, or `S10` where all rows are driven high. Sampling occurs in these rows where the FSM waits and see if a key is valid. In case the key is invalid, such as due to bouncing, the FSM jumps back to scanning all rows. If the key is indeed valid (properly debounced) the FSM jumps into the hold states:  `S2`, `S5`, `S6`, or `S11` and stays there until the key is released and goes back to scanning. 
+The FSM logic starts in 4 scan states:  `S0`, `S3`, `S6`, or `S9` each corresponding to one of the 4 rows. They allow the FSM to scan around by powering an individual row. The FSM maintains this cycle over and over until the system registers a key input. Once a key press is detected, the FSM jumps into the candidate states:  `S1`, `S4`, `S7`, or `S10` where the respective row of the keypress is held HIGH. Sampling occurs in these states where the FSM waits and see if a key is valid. In case the key is invalid, such as due to bouncing or not held long enough, the FSM jumps back to the next scanning state, looking back at all rows. If the key is indeed valid (satisfies the *one-hot* logic) the FSM will stay in this state up until debouncing is complete and then jump into the hold states:  `S2`, `S5`, `S6`, or `S11` and stays there until the key is released and goes back to scanning. 
 
-One-hot logic implementation if needed......
+The mentioned *one-hot* logic is to ensure that inputs are only recorded if a single column is pressed. This was achieved by using a bit manipulation trick outlined as `(col != 4'b0000) && ((col & (col - 1)) == 4'b0000);`. The value `(col != 4'b0000)` detects if at least one column is HIGH. The additional expression `(col & (col - 1))` is always equal to 0 if the binary number is a power of 2 which is only possible if only one bit of the binary number is HIGH. Therefore combining the logic translates to: *"TRUE if any column is HIGH and it's only one column"*. This logic helps lock the keypad by keeping the current numbers if more buttons at once therefore satisfying major constraints to successfuly complete this lab.
 
 ### Synchronization and Switch Debouncing
 
-The 
+The keypad uses mechanical switches which means any input to the FPGA will be asynchronous. Before any modules depending on the input received the value of active columns, the asynchronous column input had to go through a `synchronizer` module that lined it up properly with the rising clock edge. This meant that every dependent module was delayed by one clock cycle but received a synchronized column input. This was particularly essenstial to ensure proper operation of the keypad scanning logic. The second phase of synchronization involved slowing down the rate of state transition. The clock extracted from the `HSOSC hf_osc` module is 48MHz. At this rate switch bounces are magnified in the system and will be seen as a flurry of press/release events which would be wrong. Also the electrical signal from the keypad doesn't settle instantly and a fast clock would sample the column input before it stabilizes. To solve this, the code implements a clock divider that slows the scan rate down to $480Hz$ which is slow enough to allow inputs to settle, but also not too slow to risk delayed sampling of inputs. Also the slow clock enabled implementation of an easier debouncing logic. Using an oscilloscope, I observed traces of keypresses on the different keypads provided and I received overall a miimum bouncing of $\sim4ms$ and a maximum bouncing of $\sim38ms$. In my logic I opted to debounce to ensure I'm safe up to a $50ms$ which compared to the measured data, offers me a safe zone off the maximum bouncing observed. I implemented another counter, `DBcounter` to count for cycles ensuring a 50ms debounce. Given the clk frequency and the desired debouncing window, I calculated $DBcounter = \frac{50ms*480Hz}{1000}$ giving me $24$ ticks. These ticks determined how long the FSM held in the candidate states so that a key can be validated and sent into the hold states where it remains active until released.
+
+Overall, my FSM transition logic relied on two signals which were `keyPress` determining if a single columns is active and `DBcounter` which ensures the keypad is probably debounced before holding onto the pressed key value. Detailed transitions are shown in the diagram below:
+
+![Figure 1: FSM State Transition Diagram](images/lab3TransitionDiagram.png)
+
+
+### Key Decoding and Key Display Logic
 
 The modules to control these elements were written in SystemVerilog to run on the FPGA and to ensure proper communication and signal control, they all followed the hierachy in the block diagram below:
 
-![Figure 1: Hierachical Block Diagram](images/lab3BlockDiagram.png)
+![Figure 2: Hierachical Block Diagram](images/lab3BlockDiagram.png)
 
 After running the simulation ensuring modules work as expected, the full setup was installed on a breadboard to control the dual 7-segment display and sum LEDs using the following schematic:
 
-![Figure 2: FPGA Experiment Wiring Setup](images/lab3Schematic.png)
+![Figure 3: FPGA Experiment Wiring Setup](images/lab3Schematic.png)
 
 As seen from the schematic, the keypad columns are hooked up to $10k\Omega$ resistors and the 7-segment display to $200\Omega$ resistors to ensure reasonable (safe) current draw from the FPGA. 
 
@@ -53,9 +60,11 @@ The 7-segment display LEDs have a typical forward voltage drop of $\approx1.70V$
 
 ![Figure 4: QuestaSim Screenshot Showing Waves ](link){.lightbox}
 
+![Figure 3: QuestaSim Screenshot Showing Time Multiplexing and LED Sum Simulation Outputs](images/ledControl_tb.png){.lightbox}
 
+The waves in Figure 3 above show that the the two displays turn on at different times as `onSeg[1]` and `onSeg[1]` oscillate oppositely. The waves shows that `sevenSegIn` chooses `sW1` switch input when `onSeg[1]` is HIGH and `sW2` input when switch `onSeg[0]` is HIGH showing the time multiplexing logic works.
 
-![Figure 4: QuestaSim Screenshot Showing Seven-segment Display Simulation Outputs and Expected Outputs](images/7segDisp_tb.png)
+![Figure 5: QuestaSim Screenshot Showing Seven-segment Display Simulation Outputs and Expected Outputs](images/7segDisp_tb.png)
 
 The seven segment display also resopnds as expected.
 
