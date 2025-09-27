@@ -12,3 +12,139 @@ format:
         icon: github
 ---
 ## Introduction
+
+In this lab the STM32L432KC Microcontroller Unit (MCU) was used to play music on a speaker. The MCU did this by generating a square wave at a specific frequency for a specific duration. The system was able to play Für Elise by Beethoven and Faded by Alan Walker as part of testing the functionality.
+
+## Experiment Setup and Design Overview
+
+The main purpose of the lab was to learn how to read the manual and figure out how to set up different peripherals and the I/O of the MCU to perform the desired function. The MCU was set up to read a program containing a list of notes (shown as their frequency in Hz) and duration (shown in ms) to play the desired music.
+
+### MCU Setup Logic
+
+To set up the MCU for the desired function, we had to configure different modules to run the system clock, set up timers, pre-flash functions, and configure the GPIO to use. To do this, we had to set up respective Header files to interface these functionalities. The header files setup was `RCC.h`, `FLASH.h`, `GPIO.h`, and `TIM15_16`.
+The Reset & Clock Control (RCC) module helped set up the system clock. The clock was configured to $1MHz$ by setting bits 4-7 of the RCC_CFGR register to `1001`, which divides the original `MSI` $4MHz$ clock by 4, and the prescaler was kept at 1, entering `GPIO` and `TIM15_16` since the input clock is at the desired frequency. 
+
+## Results and Discussion
+### Edge Case Calibrations
+
+
+
+### Hardware Testing
+
+All components were collected and assembled on an extended breadboard following the schematic in Figure 3. Using Segger Embedded Studio, the code was uploaded to the MCU to play the tunes, and ensure correct register and MCU timer declarations. The hardware responded properly as shown in the example video below:
+
+![Figure 8: Hardware Execution Example Playing Songs and Adjusting Volume](images/lab4Demo.mp4)
+
+## Conclusion
+This lab took around 19 hours to complete. A lot of time was spent figuring out how to set up the proper registers for timers as well as other functions I epected to use with my MCU.  It was also hard to debug since unlike the FPGA, when anything is wrong, you don't get any output which is different from the FPGA where you get a wrong output and could debug from there. The errors I found were through register instantiation and some typos in the declarations that were not caught by the compiler. Resolving all of this allowed me to get my hardware playing music properly.
+
+## AI Prototype Summary
+
+The goal of this prototype is using AI as a documentation search assistant to navigate memory maps and guide the configuration of various peripherals. I used Chatgpt 5 to run the different prompts and it gave me the following results:
+
+1. The AI was able to recognisze the different types of registers that could be used, identified the pros and cons of using either, and also managed to predict the full course all the way from instantiating registers to implementing CCR, prescaler, and ARR functionality. However this was after I passed the STM32L4 reference manual along with the prompt. @fig-timers below shows this initial realization:
+
+![Example Timers Identified by The LLM.](images/AIPrototype/Timers.png){#fig-timers}
+
+2. After Identifying potential timers to use for the desired PWM generation, the LLM also correctly identified how to calculate the ARR, frequency, duty cycle, and necessary prescalers to perform the functions. @fig-TIMSetup below shows this implementation:
+
+![Explanations and Calculations Necessary to Find Parameters of the PWM.](images/AIPrototype/TIMSetup.png){#fig-TIMSetup}
+
+3. After correctly identifying the timers, the LLM went on to initalize all the necessary registers in proper steps. @fig-registerSetup below shows this implementation:
+
+![Register Instantiation for GP Timers TIM2/TIM3.](images/AIPrototype/registerSetup.png){#fig-registerSetup}
+
+4. Here is also an example provided to show the use of the different register declarations. This shows me that the LLM got the idea on what to do and how to setup to achieve the desired frequency RPM and durations as shown in @fig-Eaxmple below:
+
+![Example ARR and PRSC values Calculation.](images/AIPrototype/Example.png){#fig-Example}
+
+5. Lastly, the LLM provided an example code to show how it could drive the pins to generate a frequency. The code enables timers, configures GPIO, ARR and Prescalers, the code also implements a ms delay function to ensure separation between different frequencies driven.
+
+```C
+// Simple PWM tone generator on STM32L432KC
+// Output: PA0 = TIM2_CH1 (AF1)
+// Freq range: 220 Hz – 1 kHz (works for others too)
+// Toolchain: bare-metal with CMSIS headers
+
+#include "stm32l4xx.h"
+
+#define TIM2CLK_HZ   80000000UL   // Adjust if your clock tree differs
+#define TARGET_TICK  1000000UL    // We prescale timer to 1 MHz for easy math (1 tick = 1 us)
+
+static inline void tim2_set_freq(uint32_t freq_hz) {
+    if (freq_hz == 0) {
+        // Stop output
+        TIM2->CCER &= ~TIM_CCER_CC1E;
+        return;
+    }
+
+    // With timer tick at 1 MHz, ARR = (1e6 / f) - 1
+    uint32_t arr = (TARGET_TICK / freq_hz) - 1U;
+    if (arr < 1) arr = 1;  // guard
+
+    // Use 50% duty: CCR1 = (ARR+1)/2
+    uint32_t ccr = (arr + 1U) / 2U;
+
+    // Update safely using preload + UG
+    TIM2->ARR  = arr;
+    TIM2->CCR1 = ccr;
+    TIM2->EGR  = TIM_EGR_UG;     // latch PSC/ARR/CCR
+}
+
+// crude delay
+static void delay_ms(uint32_t ms) {
+    // ~4 cycles per loop at -O2 on Cortex-M4F; tweak if needed
+    // For simplicity, use a coarse busy wait:
+    volatile uint32_t n = ms * 16000UL; // assuming 64–80 MHz core; it's okay if approximate
+    while (n--) __NOP();
+}
+
+int main(void) {
+    // --- 1) Enable clocks ---
+    RCC->AHB2ENR  |= RCC_AHB2ENR_GPIOAEN;       // GPIOA clock
+    RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;       // TIM2 clock
+
+    // --- 2) Configure PA0 as AF1 (TIM2_CH1) ---
+    // PA0: MODER=10 (AF), AFRL0=0001 (AF1), push-pull, high speed
+    GPIOA->MODER   = (GPIOA->MODER & ~(3U << (0*2))) | (2U << (0*2)); // AF
+    GPIOA->AFR[0]  = (GPIOA->AFR[0] & ~(0xFU << (0*4))) | (1U << (0*4)); // AF1
+    GPIOA->OSPEEDR |= (3U << (0*2));   // high speed (optional)
+    GPIOA->OTYPER  &= ~(1U << 0);      // push-pull
+    GPIOA->PUPDR   &= ~(3U << (0*2));  // no pull (or set to taste)
+
+    // --- 3) Configure TIM2 base to 1 MHz tick ---
+    // PSC = TIM2CLK/TARGET_TICK - 1 -> 80 MHz / 1 MHz - 1 = 79
+    TIM2->CR1   = 0;                   // upcount, edge-aligned
+    TIM2->PSC   = (TIM2CLK_HZ / TARGET_TICK) - 1U;
+    TIM2->ARR   = 999;                 // placeholder (1 kHz initially)
+    TIM2->CCR1  = 500;                 // 50% duty
+
+    // PWM mode 1 on CH1 + preload
+    // OC1M = 110 (bits 6:4), OC1PE=1 (bit 3)
+    TIM2->CCMR1 &= ~((7U << 4) | (1U << 3));
+    TIM2->CCMR1 |=  (6U << 4) | (1U << 3);
+
+    // Enable output on CH1 (active-high)
+    TIM2->CCER  &= ~((1U<<1) | (1U<<3)); // CC1P=0, CC1NP=0
+    TIM2->CCER  |=  (1U<<0);             // CC1E=1
+
+    // Enable ARR preload and latch settings
+    TIM2->CR1   |= TIM_CR1_ARPE;
+    TIM2->EGR    = TIM_EGR_UG;
+
+    // --- 4) Start timer ---
+    TIM2->CR1   |= TIM_CR1_CEN;
+
+    // --- Demo: cycle a few musical-ish tones ---
+    while (1) {
+        tim2_set_freq(220);  // A3
+        delay_ms(800);
+        tim2_set_freq(440);  // A4
+        delay_ms(800);
+        tim2_set_freq(880);  // A5
+        delay_ms(800);
+        tim2_set_freq(1000); // 1 kHz
+        delay_ms(800);
+    }
+}
+```
