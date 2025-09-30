@@ -17,21 +17,87 @@ In this lab the STM32L432KC Microcontroller Unit (MCU) was used to play music on
 
 ## Experiment Setup and Design Overview
 
-The main purpose of the lab was to learn how to read the manual and figure out how to set up different peripherals and the I/O of the MCU to perform the desired function. The MCU was set up to read a program containing a list of notes (shown as their frequency in Hz) and duration (shown in ms) to play the desired music.
+The main purpose of the lab was to learn how to read the manual and figure out how to set up different peripherals and the I/O of the MCU to perform the desired function. This includes initializing the proper structures and logic which are essential to run functions and extract performance out of the MCU. The MCU was set up to read a program containing a list of notes (shown as their frequency in Hz) and duration (shown in ms) to play the desired music.
 
 ### MCU Setup Logic
 
-To set up the MCU for the desired function, we had to configure different modules to run the system clock, set up timers, pre-flash functions, and configure the GPIO to use. To do this, we had to set up respective Header files to interface these functionalities. The header files setup was `RCC.h`, `FLASH.h`, `GPIO.h`, and `TIM15_16`.
-The Reset & Clock Control (RCC) module helped set up the system clock. The clock was configured to $1MHz$ by setting bits 4-7 of the RCC_CFGR register to `1001`, which divides the original `MSI` $4MHz$ clock by 4, and the prescaler was kept at 1, entering `GPIO` and `TIM15_16` since the input clock is at the desired frequency. 
+To set up the MCU for the desired function, we had to configure different modules to run the system clock, set up timers, pre-flash functions, and configure the GPIO to use. To do this, we had to set up respective Header files to interface these functionalities. The header files setup were: `RCC.h`,the Reset & Clock Control (RCC) module to set up the system clock; `GPIO.h`, used to configure GPIO functions and enable parameters for other peripherals and `TIM6_7.h`, used to setup and configure parameters for the basic timers.
+
+The MCU features timers that have specific channels for PWM generation (`TIM2, TIM3, TIM15, & TIM16`). They can be configured for PWM using output compare mode (CCR) and different prescaler values and auto-reload settings (ARR) to set up PWM frequencies and duty cycle. This approach was a challenge for me in terms of configuring the relevant registers and structures to perform PWM on `TIM15` or `TIM16` properly. The major issue is that if one bit is configured wrong, it renders a register useless, and this will yield no output on the circuit; it was hard for me to debug even with an oscilloscope. I elected to use the basic timers `TIM6 and TIM7` to perform the tasks for this lab, which was simpler as I had full control over the behaviour of the counters. The main idea was to configure each timer’s prescaler and `ARR` so that the counters overflow at predictable intervals and then constantly check the timer’s status register (SR) for when the `UIF` bit is set. For delays, `TIM6` runs until it overflows at the desired duration, at which point the UIF is cleared to acknowledge completion. For PWM generation, `TIM7` is configured to overflow at half of the desired wave period, which is used to time each high- and low-phase of the square wave.
+
+### Implementation
+
+Each timer is driven by the system clock (4MHz) and is divided using the AHB prescaler down to 1MHz to set the peripheral clock (HCLK) for all timers, following the equation below:
+
+$$
+\text{HCLK} = \frac{\text{SYSCLK}}{\text{AHB Factor}} = \frac{\text{4MHz}}{4} = \text{1MHz}
+$$ {#eq-HCLK}
+
+The HCLK was further divided down to set the counter frequency of `TIM6` to 1kHz, meaning that each tick was exactly 1ms. This scaling allowed me to implement the delay functionality by setting `ARR = dur – 1`, where dur is the desired frequency duration, and waiting until the UIF flag is raised. `TIM6` count frequency was obtained by setting `TIM6` prescaler (PSC) to `PSC = 999` as shown below:
+
+$$
+f_\text{TIM6} = \frac{\text{HCLK}}{(\text{PSC}+1)} = \frac{\text{1MHz}}{(999+1)} = \text{1kHz}
+$${#eq-DelayFreq}
+
+For PWM generation, both `TIM6` and `TIM7` are used together. `TIM6` measures the total pulse duration by overflowing after `dur` milliseconds. Since we configured `TIM7` to drive a PWM output in toggle mode, the hardware toggles the output every overflow. This means that the output signal is two overflows long (one rising and one falling edge).  Therefore, to generate the desired frequency, `TIM7` is configured to overflow every half-period of the desired frequency (run at twice the desired frequency), given a 1MHz timer frequency as shown below:
+
+$$
+T_\text{half} = \frac{1}{2f_\text{PWM}} = \frac{1,000,000}{2 f_\text{PWM}} \text{µs}
+$$ {#eq-WaveFreq}
+
+This is used to time each high- and low-phase of the square wave. Inside the PWM loop, the GPIO pin is driven high for one half-period, then low for the next half-period, with each phase timed by constantly checking UIF on `TIM7`, the wave timer. The process continues until UIF on `TIM6` indicates that the total duration has expired. Suppose the overall delay timer finishes in the middle of a PWM cycle. In that case, the code breaks out instead of doing another half-period, essentially handling one of the edge cases in PWM generation. Also, the UIF bit is cleared after each wait, ensuring the next period is measured accurately.
+
+This logic avoids system interrupts because the UIF is polled directly, allowing all control to be done in software. This keeps the CPU busy through wait loops, limiting it to only one function, as this also makes debugging easier. This works for this lab, as the CPU doesn’t need to perform any other functions simultaneously or otherwise, I would have to use interrupts.
+
+## Verification of Timer Limits and Edge Cases
+
+The delay timer, `TIM6`, runs at a counter frequency of $1kHz$, where one tick is equivalent to $1ms$. The overflow period for the timer is obtained through:
+
+$$
+t_\text{delay} = \frac{(ARR + 1)}{f_\text{TIM6}}
+$$ {#eq-Delay}
+
+- The ***minimum delay*** can only be achieved when `ARR = 0` since it can never be negative. Therefore:
+
+$$
+t_\text{delay} = \frac{(0 + 1)}{\text{1kHz}} = 1ms
+$$ {#eq-MinDelay}
+
+- TIM6 has a 16-bit counter, therefore ***maximum delay*** can only be achieved when `ARR = 65,535`. Therefore:
+
+$$
+t_\text{delay} = \frac{(65535 + 1)}{\text{1kHz}} = 65.536s
+$$ {#eq-MaxDelay}
+
+With a counter frequency of $1 kHz$, `TIM6` supports a duration within the range of **1 ms** to **65.536 s**, with **1 ms** resolution, which is more than enough for the desired application in this lab.
+
+The PWM wave timer, `TIM7`, runs at HCLK which is $1MHz$ and is toggled on each overflow. As mentioned before in the [Implementation](#implementation) section above, `TIM7` has to toggle at twice the desired rate to ensure the output square wave comes out as desired. The frequency of the toggled square wave is determined by @eq-toggle below:
+
+$$
+f_\text{PWM} = \frac{\text{HCLK}}{2(ARR + 1)}
+$$ {#eq-toggle}
+
+- @eq-toggle above shows that the PWM frequency is inversely proportional to `ARR`. Therefore ***minimum toggle frequency*** exists at the maximum possible `ARR` value, `ARR = 65,535`. Therefore:
+
+$$
+f_\text{PWM} = \frac{1,000,000}{2(65535 + 1)} = 500kHz
+$$ {#eq-Mintoggle}
+
+- Following similar logic, ***maximum toggle frequency*** exists at the minimum possible `ARR` value, `ARR = 0`. Therefore:
+
+$$
+f_\text{PWM} = \frac{1,000,000}{2(0 + 1)} = 7.629Hz
+$$ {#eq-Maxtoggle}
+
+With a timer frequency of $1MHz$, `TIM7` supported frequencies range calculated above encompasses the desired frequency range of **220Hz** to **1000Hz** sufficient for our applications.
 
 ## Results and Discussion
-### Edge Case Calibrations
 
-
+BLa bla bla
 
 ### Hardware Testing
 
-All components were collected and assembled on an extended breadboard following the schematic in Figure 3. Using Segger Embedded Studio, the code was uploaded to the MCU to play the tunes, and ensure correct register and MCU timer declarations. The hardware responded properly as shown in the example video below:
+All components were collected and assembled on an extended breadboard following the schematic in @fig-Lab4Schematic. Using Segger Embedded Studio, the code was uploaded to the MCU to play the tunes, and ensure correct register and MCU timer declarations. The hardware responded properly as shown in the example video below:
 
 ![Figure 8: Hardware Execution Example Playing Songs and Adjusting Volume](images/lab4Demo.mp4)
 
@@ -54,7 +120,7 @@ The goal of this prototype is using AI as a documentation search assistant to na
 
 ![Register Instantiation for GP Timers TIM2/TIM3.](images/AIPrototype/registerSetup.png){#fig-registerSetup}
 
-4. Here is also an example provided to show the use of the different register declarations. This shows me that the LLM got the idea on what to do and how to setup to achieve the desired frequency RPM and durations as shown in @fig-Eaxmple below:
+4. Here is also an example provided to show the use of the different register declarations. This shows me that the LLM got the idea on what to do and how to setup to achieve the desired frequency RPM and durations as shown in @fig-Example below:
 
 ![Example ARR and PRSC values Calculation.](images/AIPrototype/Example.png){#fig-Example}
 
