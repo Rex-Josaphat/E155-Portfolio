@@ -50,7 +50,7 @@ This is used to time each high- and low-phase of the square wave. Inside the PWM
 This logic avoids system interrupts because the UIF is polled directly, allowing all control to be done in software. This keeps the CPU busy through wait loops, limiting it to only one function, as this also makes debugging easier. This works for this lab, as the CPU doesn’t need to perform any other functions simultaneously or otherwise, I would have to use interrupts.
 
 ## Verification of Timer Limits and Edge Cases
-
+### Delay Limits
 The delay timer, `TIM6`, runs at a counter frequency of $1kHz$, where one tick is equivalent to $1ms$. The overflow period for the timer is obtained through:
 
 $$
@@ -71,6 +71,7 @@ $$ {#eq-MaxDelay}
 
 With a counter frequency of $1 kHz$, `TIM6` supports a duration within the range of **1 ms** to **65.536 s**, with **1 ms** resolution, which is more than enough for the desired application in this lab.
 
+### PWM Frequency Limits
 The PWM wave timer, `TIM7`, runs at HCLK which is $1MHz$ and is toggled on each overflow. As mentioned before in the [Implementation](#implementation) section above, `TIM7` has to toggle at twice the desired rate to ensure the output square wave comes out as desired. The frequency of the toggled square wave is determined by @eq-toggle below:
 
 $$
@@ -80,29 +81,49 @@ $$ {#eq-toggle}
 - @eq-toggle above shows that the PWM frequency is inversely proportional to `ARR`. Therefore ***minimum toggle frequency*** exists at the maximum possible `ARR` value, `ARR = 65,535`. Therefore:
 
 $$
-f_\text{PWM} = \frac{1,000,000}{2(65535 + 1)} = 500kHz
+f_\text{PWM} = \frac{1,000,000}{2(65535 + 1)} = 7.629Hz
 $$ {#eq-Mintoggle}
 
 - Following similar logic, ***maximum toggle frequency*** exists at the minimum possible `ARR` value, `ARR = 0`. Therefore:
 
 $$
-f_\text{PWM} = \frac{1,000,000}{2(0 + 1)} = 7.629Hz
+f_\text{PWM} = \frac{1,000,000}{2(0 + 1)} = 500kHz
 $$ {#eq-Maxtoggle}
 
 With a timer frequency of $1MHz$, `TIM7` supported frequencies range calculated above encompasses the desired frequency range of **220Hz** to **1000Hz** sufficient for our applications.
 
-## Results and Discussion
+### Song Playing Accuracy
+The durations were pretty much accurate because `TIM6` was confugured with a period in milliseconds. The desired duration was directly equivalent to the `ARR` used in @eq-Delay. The ARR input into the equation was calculated using the equation below:
 
-BLa bla bla
+$$
+\text{ARR} = \text{duration} - 1
+$$ {#eq-DelayCalc}
 
-### Hardware Testing
+This meant that going into calculations the period divider was equivalent to the actual millisecond delay desired.
 
-All components were collected and assembled on an extended breadboard following the schematic in @fig-Lab4Schematic. Using Segger Embedded Studio, the code was uploaded to the MCU to play the tunes, and ensure correct register and MCU timer declarations. The hardware responded properly as shown in the example video below:
+For the frequencies, the ARR input into `TIM7` was calculated using the half-frequency division to allow running both rising and falling edges of the square wave within the timing window set by the delay. It was obtained using the following equation:
 
-![Figure 8: Hardware Execution Example Playing Songs and Adjusting Volume](images/lab4Demo.mp4)
+$$
+\text{ARR} = \frac{\text{HCLK}}{2f_\text{PWM}} - 1
+$$ {#eq-FreqCalc}
+
+- If the desired frequency was **220Hz** then, @eq-FreqCalc gives $ARR\approx 2272$. Substituting this in @eq-toggle gives toggle frequency, $f_\text{toggle} = 219.97Hz$, equivalent to a **0.014% error**.
+- If the desired frequency was **1000Hz** then, @eq-FreqCalc gives $ARR\approx 499$. Substituting this in @eq-toggle gives toggle frequency, $f_\text{toggle} = 1000Hz$, equivalent to a **0.00% error**.
+
+This proves that individual pitches are accurate within 1% across the frequency range of 220-1000 Hz as desired, therefore verifying precision and accuracy of the design.
+
+## Hardware Testing and Results
+
+After verifying the MCU logic, the code was uploaded on the hardware for testing using Segger Embedded Studio. The setup used onboard switches connected to pins `A7` and `A4` of the MCU. These pins were used to switch between the two available songs. The switches were configured by activating the onboard $10k\Omega$ pull-up resistors through the dedicated `PURPDR` GPIO function. The MCU toggle output through pin `A7` was fed into a $10k\Omega$ potentiometer for volume control, which sent it to the non-inverting input of the LM386 op-amp. The ouput of the op-amp (analog signal) went to the speaker to play the chosen song. All components were collected and assembled on an extended breadboard following the schematic below:
+
+![MCU Experiment Wiring Setup](images/lab4Schematic.png){#fig-Lab4Schematic}
+
+The hardware responded properly as shown in the example video below:
+
+![Hardware Execution Example Playing Songs and Adjusting Volume](images/lab4Demo.mp4){#fig-Demo}
 
 ## Conclusion
-This lab took around 19 hours to complete. A lot of time was spent figuring out how to set up the proper registers for timers as well as other functions I epected to use with my MCU.  It was also hard to debug since unlike the FPGA, when anything is wrong, you don't get any output which is different from the FPGA where you get a wrong output and could debug from there. The errors I found were through register instantiation and some typos in the declarations that were not caught by the compiler. Resolving all of this allowed me to get my hardware playing music properly.
+This lab took around 19 hours to complete. A lot of time was spent figuring out how to set up the proper registers for timers as well as other functions I epected to use with my MCU.  It was also hard to debug since unlike the FPGA, when anything is wrong, you don't get any output which is different from the FPGA where you get a wrong output and could debug from there. The errors I found were through register instantiation and some typos like negative signs in the implementation that were not caught by the compiler. Resolving all of this allowed me to get my hardware playing music properly.
 
 ## AI Prototype Summary
 
@@ -214,3 +235,5 @@ int main(void) {
     }
 }
 ```
+
+The code provided seems resonable to me. It configures TIM2 for PWM generation, same way I could have done with TIM15. It calls the necessary structures such as `CR1, CCR, PSC, and ARR`. The code compiles of course except for some specific variables the LLM probably defined in the assumed **stm32l4xx.h** header file. I didn't test the code on hardware, but from what I analyzed so far I believe it works well. The LLM also uses the crude delay with the assembly `__nop` function.
