@@ -12,3 +12,41 @@ format:
         icon: github
 ---
 ## Introduction
+
+In this lab, the MCU was used to interface with a quadrature encoder to measure the speed (in revolutions/sec) and direction (Clockwise/anti-clockwise) of a DC motor. The MCU did this by using the encoder mode of the advanced timer, TIM1, and using the basic timer, TIM6, to sample the incoming wave, calculating position difference and direction. In the end, the design could display the motor speed as well as the direction, accounting for instances when the motor is also at rest.
+
+The quadrature encoder in this lab uses a motor to trigger Hall effect sensors, which output two square waves that are $90^\circ$ out of phase. This phase difference is what was used to determine the period of the waves and hence calculate the speed and direction of the motor.
+
+## Experiment Setup and Design Overview
+
+The main purpose of the lab was to use interrupts to interface with the encoder by triggering interrupts on the edges of the encoder pulses following a sampling time of $0.083 s$, to find the difference in positions, which was then used to determine both the direction and speed of the motor. The design measured and displayed the motor speed in rev/s with an update of at least $1Hz$.
+
+### MCU Setup Logic
+
+To set up the MCU for the desired function, we had to configure different modules to run the system clock, set up timers, and configure GPIO. This time, we were allowed to use the CMSIS library, which meant that all the register structs for the MCU were predefined, which simplified the code and design. The libraries also had some added functionality from the functions and logic set up in the previous lab, as some of it, such as configuring timers, was used in this lab as well. The given motor had $PPR = 408$, so with a quadrature encoder, I set ` PULSES_PER_REV  =  1632`.
+
+I leveraged encoder interface mode 3 for `TIM1`, which allows me to connect an incremental encoder directly to the timer. Pins `PA8` and `PA9` were configured for alternate function and connected to the two `TIM1` channels. The signals from the encoder came in through these pins, and each complete quadrature cycle (both rising and falling edges of both channels) increments or decrements the counter. The counter direction is set in the hardware direction bit (obtained from `TIM1->CR1 & TIM_CR1_DIR`) and is also used to determine the effective direction and position of the motor. The counter limit, ARR, was set to `ARR = PULSES_PER_REV - 1` so `TIM1` counter wraps once per mechanical revolution. This wrap-around logic identifies the difference between the past recorded and current motor position (essentially 2 different values of `TIM1` counter) and turns it into the smallest, correctly signed motion across a wrap. The sign of this difference is what is used to determine the direction. The difference is mapped into the nearest step around a circle by comparing it to ` PULSES_PER_REV /2`. If less, I subtract ` PULSES_PER_REV ` and vice versa. However, if a sample occurs at the half turn, I use the direction provided by the `TIM1` hardware direction bit. This logic ensures proper signage every time: for example, moving from $400$ to $10$ would give a difference of $-390$. Which would be the wrong motor direction, but after applying the wrap logic, I get $18$, which shows me the actual step completed and the right direction (sign). 
+
+A separate timer, `TIM6`, runs at the sample period of $0.09 s$ with a 1KHz clock (obtained by prescaling down the 4MHz system clock). `TIM6` ISR snapshots `TIM1->CNT` and the value is recorded and used to determine motor position. The major concern is aliasing. My safe zone is valid as long as the shaft moves less than half a revolution per sample. This means the chosen sample period of **0.083s**is valid as long as $rps*0.083< 0.5$, which means my wrap-around logic is valid up to $\approx6Rev/s$ (360rpm), which is more than enough since the given motor does $2Rev/s$ at 10V and around $5Rev/s$ at 24V. The quadrature encoder was connected to the +5V from the MCU, and the signals were connected to the 5V-tolerant pins 8 and 9. The motor itself was connected to the lab power supply to feed with the ability to feed both negative and positive voltages to the motor (in the range ±25V).
+
+### Implementation
+
+The main function communicates with `TIM6` interrupt handler through only a few set of select signals that set up the whole functionality. `TIM6` is configured as a basic timer with a prescaler and ARR to generate interrupts every 0.083s and sets `UIF` bit. On each interrupt, the handler reads the current value of `TIM1->CNT` and compares it to the previous value. The difference is adjusted for wrap-around using the logic described above and the ISR sets `sample = 1` signaling the main loop to calculate and print values. The main loop waits for the interrupt to update the position and direction based on the difference calculated in the IQR function. The loop would print values and then reset the `sample` flag. This can be seen in @fig-flowChart below:
+
+![Interrupt Design Flowchart](images/Lab5Flowchart.png){#fig-flowChart}
+
+An alternative to periodic-interrupt sampling is polling, where the `TIM6` update interrupt flag (`UIF`) is checked frequently in the `main()` loop, and samples are taken when the flag is set. While polling can be simpler to implement, it is generally less efficient because the CPU must continuously check the flag, consuming more processing resources and potentially missing other important tasks such as printing, calculatin, or reading encoder signals. If we were to ensure the CPU does all of this while polling, the design would have a timing error that would invalidate the speed measurements.
+
+$$
+\text{RPS} = \frac{\text{delta}}{\text{PPR} * \text{T_sampling}}
+$$ {#eq-revCalc}
+
+
+
+## Hardware Setup
+
+Blabla blab la add scematic
+![MCU Experiment Wiring Setup](images/lab5Schematic.png){#fig-Lab5Schematic}
+
+## AI Prototype Summary
+
