@@ -88,18 +88,34 @@ We expect the toughest stage to be the mechanical bus. Synchronizing all actuato
 
 ## Project Timeline & Task Allocation
 
-- By **10/26/2025:** Have the proposal and project approved and verified to begin working (Both).
-- Week of **10/27/2025:** Submit purchase order. Develop and test MCU-FPGA encryption module (Josaphat) and MCU driver for ASCII encoding/decoding and web requests (Chistian).
-- Week of **11/03/2025:** Machine and cutdown metal rods. Start assembling and testing the electronics and mechanical system. Troubleshoot annd resolve any issues errors (Both).
-- Week of **11/10/2025:** Develop and test MCU-FPGA decryption module (Josaphat) and MCU code for system monitoring and fault detection (Christian).
-- Week of **11/17/2025:** Preliminary testing of the full system. Connecting all parts and running all systems to check performance and troubleshoot errors (Both).
-- Week of **11/24/2025:** Begin preliminary project report. Debug if any errors are still ongoing. If complete, look at implementing some strech goals or aesthetic modificatons. (Both)
-- Week of **12/01/2025:** Finalize report. Perfom final system shakedown to validate all performance specs and prepare checkoff sheet. PROJECT DEMO!!! (Both)
+- **By 10/26/2025:** Have the proposal and project approved and verified to begin working (Both).
+- **Week of 10/27/2025:** Submit purchase order. Develop and test MCU-FPGA encryption module (Josaphat) and MCU driver for ASCII encoding/decoding and web requests (Chistian).
+- **Week of 11/03/2025:** Machine and cutdown metal rods. Start assembling and testing the electronics and mechanical system. Troubleshoot annd resolve any issues errors (Both).
+- **Week of 11/10/2025:** Develop and test MCU-FPGA decryption module (Josaphat) and MCU code for system monitoring and fault detection (Christian).
+- **Week of 11/17/2025:** Preliminary testing of the full system. Connecting all parts and running all systems to check performance and troubleshoot errors (Both).
+- **Week of 11/24/2025:** Begin preliminary project report. Debug if any errors are still ongoing. If complete, look at implementing some strech goals or aesthetic modificatons. (Both)
+- **Week of 12/01/2025:** Finalize report. Perfom final system shakedown to validate all performance specs and prepare checkoff sheet. PROJECT DEMO!!! (Both)
 
 ## Appendix
 
 The appendix contains images and diagrams highlighing the full setup and other considerations to ensure the project goes as planned:
 
-### Block Diagrams
+All the relevant elements defined in the description above and will be connected together following the communication protocols and setup in @fig-sysDiagram below:
 
-![Quadrature Encoder And Motor Wiring Setup](images/lab5Schematic.png){#fig-Lab5Schematic}
+![Main Block Diagram.](docs/topBlockDiagram.png){#fig-sysDiagram .lightbox}
+
+The actuation block requires different modules and setup necessary for it to work as expected. The relay module specifications show the mentioned NO and NC connection modes. @fig-actBlock below shows the signals as well as voltage and circuit configurations:
+
+![Hardware Actuation Block Diagram](docs/actuationBlock.png){#fig-actBlock .lightbox}
+
+![Hardware Actuation 3D Visualization](docs/actuationCircuit.png){#fig-actDiagram}
+
+The team has a fall-back plan in case new errors and challenges come up along the way to ensure that at least the main idea of transfering encrypted data mechanically still stands.
+
+![Fallback Plan](docs/contingency.png){#fig-fallback}
+
+
+
+
+
+
