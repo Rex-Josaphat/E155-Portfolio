@@ -72,7 +72,7 @@ We expect the toughest stage to be the mechanical bus. Synchronizing all actuato
 - **Main performance spec:** 
     - [ ] Send a single word (16 characters/letters maximum)
 - **Secondary performace specs:**
-    - [ ] Text messages are correctly sent/received between the EPS32 to the MCU
+    - [ ] Text messages are correctly sent/received between the ESP8266 to the MCU
     - [ ] MCU correctly encodes & decodes the received word in ASCII 
     - [ ] MCU-FPGA encryption/decryption modules communicate and perform as expected
     - [ ] 9 mechanical channels properly synchronized between the two sides.
