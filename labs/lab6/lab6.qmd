@@ -12,3 +12,530 @@ format:
         icon: github
 ---
 ## Introduction
+
+In this lab, the MCU was used to interface with a temperature sensor based on the DS1772 chip via the SPI protocol. The MCU read the raw temperature data, decoded it, and transmitted the processed value to an ESP8266 module, which hosted a custom web interface. The website displayed the temperature values and allowed the user to adjust the measurement resolution all the way from a rounded whole number up to the accuracy within $\frac{1}{16}$. The web server also had the ability to control an onboard LED and display it's status via commands sent directly from webpage. These features effectively implemented a functional IoT device combining sensing, data processing, wireless communication, and remote control.
+
+## Experiment Setup and Design Overview
+
+The main objective of this lab was to configure the onboard SPI protocol to interface correctly with the temperature sensor chip. This required implementing the appropriate SPI configuration functions and developing firmware drivers capable of interpreting web-based requests like resolution adjustments and temperature and decoding them into accurate temperature values. Communication with the ESP8266 was handled via onboard USART. The drivers for this function were provided to us in the starter code. However, we had to implement functions to remotely send temperature queries.
+
+### DS1722 Sensor Setup Logic
+
+The temperature sensor transmits data as an 8-bit stream over SPI. To read the temperature, the MCU first sends the 8-bit register address (either `0x01 or 0x02`) followed by a dummy byte (0x00) to clock out the response from the sensor. MCU must perform two reads: one from `0x01` (MSB) and another from `0x02` (LSB), combining the bits and then decoding them into a decimal temperature value. Readings from `0x01` register stored the temperature as a two's complement which was adjusted anytime we received negative readings. `0x02` stored fractional resolutions of the temperature reading.
+
+The DS1722 supports 8, 9, 10, 11, and 12 bit resolution settings each corresponding to a number decimal digits and a specific decimal fraction with 8bit being a rounded whole number and 12bit a temperature reading with 4 decimal poin. The specific resolution was obtained using the website by clicking specific buttons, which sent a request to the MCU with specific resolution bits configured in the `0x02` register. If the resolution was above 8 bits, the MCU would adjust the temperature value using the expression `((lsb >> 4) & 0x0F) * 0.0625`. This works because every bit in the `0x02` register corresponds to $\frac{1}{16} = 0.0625$. The resolution bits are stored in bits `[7:4]` which are left shifted and isolated using the and function. The resulting number is multiplied by the bit resolution to output the adjusted temperature. Our design used the sensors continous mode where the registers are regularly updated with new temperature. However this created a noticeable lag on the web requests especially for higher resolution requests because the temperature reading now had to change while being read. This added a latency in updating the resolution and when the temperature reading would be in that resolution.
+
+### MCU Setup Logic
+
+The MCU acts as a bridge connecting the functions on the board and the temperature sensor to the hosted webpage. The SPI1 mode was configured on the MCU by activating the `APB2ENR` peripheral clk. We then set the `CR1` register to configure SPI1 settings such as setting the MCU as master, baud rate, clock phase and clock polarity. The baud rate was set to the maximum (`0b111`), which divides the input clock signal by 256. The clock polarity was 0 and phase set to 1 so that data changes on the rising edge of the clock. We also set full duplex and limited the size of transactions to 8 bits and the frame format to Motorolla mode. Before sending, the MCU would check if the transmit buffer is empty (checking if `TXE` flag is set), and then sent the 8 bits of data. In receiving, we implemented a pointer to pull out the necessary 8 bits and store tem for us to read. This was because the receiving register is 16 bits wide and we are only using 8. The MCU would continously check if the receiving buffer is full (checking if `RXNE` flag is set) and would return the recieved data. This implementation was concatenated in the function `spiSendReceive(char send)` that was used for any hardware SPI functionality. 
+
+We are using hardware SPI, which is equivalent to using the onboard functionality of the MCU to run SPI. This required to configure specific pins on the MCU so that it runs, otherwise there would be conflicts that would prevent communication to the DS1722 sometimes even hinder the USART connection to the ESP8266 which also required specifically pins `A9` and `A10`. 
+
+## Hardware Setup and Testing
+
+After verifying the MCU logic, the code was uploaded on the hardware for testing using Segger Embedded Studio. For the DS1722, we had to provide analog and digital supply voltages ($V_{DDA}$ and $V_{DDD}$ respectively) and power the Serial Interface Mode ($SERMODE$) to allow SPI. The other pins were connected to the respecive SPI lines from the MCU. The ESP8266 required power and connecting the `Tx` and `Rx` pins to the `Rx` and `Tx` pins on the MCU, respectively.
+
+![DS1722 and ESP2866 Wiring Setup](images/lab6Schematic.png){#fig-Lab6Schematic}
+
+When we run the code, we are able to connect to the Wi-Fi generated by the ESP8266 and from here we can navigate to the hosted demo webpage where we find all the information and could send requests to change LED state or temeperature resolution bits.
+
+![Demo Webpage](images/DemoWeb.png){#fig-DemoWeb width=80%}
+
+Temperature is displayed up to 4 decimal places since the most resolution we can get, $0.0625$, is 4 dp. To further test the hardware, I setup the logic analyzer to vizualize the SPI transactions between the MCU and the DS1722 temperature sensor. Below is an example of a transaction shown on the logic analyser
+
+![Example SPI Transaction](images/Transaction.png){#fig-SPITransac}
+
+## Conclusion
+
+This lab took around 27 hours to complete. I lost a lot of time debugging my communication protocols. The common issue is that there is a pin conflict that happens when the ESP8266 is in the dedicated slot on the development board. This meant that I had to define specific pins to execute USART and SPI properly. I also had errors in the way I had initialized SPI where wrong bitmasks were used and had missed other configs. These took a lot of time because it was always hard to tell if the issue is from the web, hardware, or the code declarations themselves. Extra time lost was from setting up the logic analyzer to vizualise my SPI transactions. 
+
+## AI Prototype Summary
+
+The goal was to use AI to generate a demo webpage, imitating the function of the current webpage that we used. Also the other function was to create a code to interface the DS1722 and ESP8266 using SPI and USART to compare and contrast the results and drawbacks of each approach.
+
+The first prompt was to create a demo webpage and I received the following html code. The AI went all in in executing this website. It added CSS and added extra functionalities like unit conversion, LED blinking on demand, even adjusting how often temperature is polled from the sensor and updated on the web. The resuly was much better than the web style I implemented. I couldn't use it for my work since it assumed I will be using specifc API from the chips instead of hardware communication thorugh SPI and USART. The rendered html provided the web below:
+
+![AI Demo Webpage](images/AIPrompt1.png){#fig-Prompt1}
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Temperature Portal</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #12182b;
+      --muted: #9aa3b2;
+      --accent: #5aa9ff;
+      --good: #22c55e;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 800px at 20% 10%, #0f1732 0, var(--bg) 60%);
+      color: #e6eaf2;
+      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .app {
+      width: 100%;
+      max-width: 980px;
+      display: grid;
+      gap: 20px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .title {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+    h1 { margin: 0; font-size: clamp(20px, 2.2vw + 10px, 32px); }
+    .badge {
+      font-size: 12px; letter-spacing: .3px; text-transform: uppercase;
+      color: var(--muted); border: 1px solid #2a3557; padding: 4px 8px; border-radius: 999px;
+    }
+    .grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 20px; }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+
+    /* Temperature display */
+    .temp-wrap { display: grid; gap: 12px; }
+    .temp-row {
+      display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 12px;
+    }
+    .temp {
+      font-variant-numeric: tabular-nums; letter-spacing: .5px;
+      font-weight: 700;
+      font-size: clamp(44px, 7vw, 88px);
+      line-height: 1;
+    }
+    .units {
+      display: grid; gap: 8px; justify-items: end;
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px; padding: 4px; border-radius: 999px;
+      background: #0e1630; border: 1px solid #273256;
+    }
+    .pill button { 
+      appearance: none; border: 0; background: transparent; color: var(--muted);
+      padding: 6px 10px; border-radius: 999px; cursor: pointer; font-weight: 600;
+    }
+    .pill button.active { background: var(--accent); color: #041022; }
+
+    .sub {
+      font-size: 13px; color: var(--muted);
+    }
+    .row { display: flex; align-items: center; gap: 12px; }
+    .grow { flex: 1; }
+
+    .controls { display: grid; gap: 14px; }
+
+    /* Toggle switch */
+    .toggle {
+      position: relative; width: 60px; height: 34px; border-radius: 999px; background: #253153; border: 1px solid #2a3557; cursor: pointer; transition: background .2s ease;
+    }
+    .toggle::after {
+      content: ""; position: absolute; top: 3px; left: 3px; width: 28px; height: 28px; border-radius: 50%; background: white; transition: transform .2s ease;
+    }
+    .toggle[data-on="true"] { background: #1b7642; border-color: #1b7642; }
+    .toggle[data-on="true"]::after { transform: translateX(26px); }
+
+    .led-dot { width: 10px; height: 10px; border-radius: 50%; background: #3b435a; box-shadow: 0 0 0 2px #273256 inset; }
+    .led-dot.on { background: #44ff9a; box-shadow: 0 0 18px #44ff9a; }
+
+    select, button, input[type="number"] {
+      appearance: none; border: 1px solid #2a3557; background: #0e1630; color: #e6eaf2; padding: 10px 12px; border-radius: 10px; font-weight: 600;
+    }
+    button.icon {
+      display: inline-flex; align-items: center; gap: 8px; cursor: pointer; background: #0e1630; border: 1px solid #2a3557; padding: 10px 12px; border-radius: 10px;
+    }
+    button.icon:hover { border-color: #3a4a7e; }
+
+    .status { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 10px var(--warn); }
+    .dot.ok { background: var(--good); box-shadow: 0 0 10px var(--good); }
+    .dot.err { background: var(--bad); box-shadow: 0 0 10px var(--bad); }
+
+    footer { text-align: center; color: var(--muted); font-size: 12px; }
+    a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Temperature portal">
+    <header>
+      <div class="title">
+        <h1>Temperature Portal</h1>
+        <span id="badge" class="badge" title="API mode">Live</span>
+      </div>
+      <div class="row">
+        <button id="refreshBtn" class="icon" title="Refresh now" aria-label="Refresh temperature">⟳ Refresh</button>
+        <select id="intervalSelect" aria-label="Auto-refresh interval">
+          <option value="1000">1s</option>
+          <option value="2000" selected>2s</option>
+          <option value="5000">5s</option>
+          <option value="0">Off</option>
+        </select>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card temp-wrap" aria-labelledby="tempHeading">
+        <div class="temp-row">
+          <div>
+            <div id="temp" class="temp" aria-live="polite" aria-atomic="true">--.–</div>
+            <div class="sub">Last updated <span id="updated">—</span></div>
+          </div>
+          <div class="grow"></div>
+          <div class="units" aria-label="Precision and units">
+            <label class="sub" for="precision">Precision</label>
+            <select id="precision" title="Change decimal precision">
+              <option value="0">0 decimals</option>
+              <option value="1">0.1</option>
+              <option value="2" selected>0.01</option>
+              <option value="3">0.001</option>
+              <option value="4">0.0001</option>
+            </select>
+            <div class="pill" role="group" aria-label="Units">
+              <button id="unitC" class="active" aria-pressed="true">°C</button>
+              <button id="unitF" aria-pressed="false">°F</button>
+            </div>
+          </div>
+        </div>
+        <div class="status"><span id="connDot" class="dot"></span><span id="statusText">Connecting…</span></div>
+      </section>
+
+      <section class="card controls" aria-labelledby="controlsHeading">
+        <h2 id="controlsHeading" style="margin:0 0 6px">Controls</h2>
+        <div class="row" aria-live="polite">
+          <div class="grow">
+            <div class="sub" id="ledLabel">LED</div>
+            <div class="row" style="margin-top:6px; align-items:center; gap:12px">
+              <div id="ledSwitch" class="toggle" role="switch" aria-checked="false" tabindex="0"></div>
+              <div id="ledDot" class="led-dot" aria-hidden="true"></div>
+              <div id="ledState" class="sub">Off</div>
+            </div>
+          </div>
+          <button id="blinkBtn" class="icon" title="Blink 3×">
+            ✦ Blink 3×
+          </button>
+        </div>
+        <div class="sub">Tip: Space/Enter toggles the LED when the switch is focused.</div>
+      </section>
+    </div>
+
+    <footer>Editable single-file UI • Hook your endpoints in <code>API</code> below</footer>
+  </div>
+
+  <script>
+    /**
+     * === API ENDPOINTS ===
+     * Replace these with your actual routes.
+     * Expected payloads:
+     *   GET  /api/temperature  -> { temperature: number } in Celsius
+     *   GET  /api/led          -> { state: boolean }
+     *   POST /api/led          -> { state: boolean } with JSON body { state }
+     *   POST /api/led/blink    -> { ok: true }
+     */
+    const API = {
+      temp: "/api/temperature",
+      led: "/api/led",
+      blink: "/api/led/blink",
+    };
+
+    // --- DOM refs ---
+    const el = {
+      temp: document.getElementById('temp'),
+      updated: document.getElementById('updated'),
+      precision: document.getElementById('precision'),
+      unitC: document.getElementById('unitC'),
+      unitF: document.getElementById('unitF'),
+      statusText: document.getElementById('statusText'),
+      connDot: document.getElementById('connDot'),
+      badge: document.getElementById('badge'),
+      interval: document.getElementById('intervalSelect'),
+      refreshBtn: document.getElementById('refreshBtn'),
+      ledSwitch: document.getElementById('ledSwitch'),
+      ledDot: document.getElementById('ledDot'),
+      ledState: document.getElementById('ledState'),
+      blinkBtn: document.getElementById('blinkBtn'),
+    };
+
+    // --- State ---
+    let state = {
+      celsius: NaN,        // last raw Celsius value
+      precision: +(localStorage.getItem('precision') ?? 2),
+      unit:   localStorage.getItem('unit') ?? 'C',
+      intervalMs: +(localStorage.getItem('interval') ?? 2000),
+      demo: false,
+    };
+
+    // helpers
+    const fmtTime = (d) => d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+    const cToF = (c) => (c * 9/5) + 32;
+
+    function renderTemp() {
+      if (Number.isNaN(state.celsius)) { el.temp.textContent = '--.–'; return; }
+      const val = state.unit === 'C' ? state.celsius : cToF(state.celsius);
+      const fixed = val.toFixed(state.precision);
+      el.temp.textContent = `${fixed} °${state.unit}`;
+    }
+
+    function setStatus(kind, msg) {
+      el.statusText.textContent = msg;
+      el.connDot.classList.remove('ok', 'err');
+      if (kind === 'ok') el.connDot.classList.add('ok');
+      if (kind === 'err') el.connDot.classList.add('err');
+    }
+
+    // --- Fetch with timeout ---
+    async function fetchJSON(url, opts = {}, timeoutMs = 1500) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), timeoutMs);
+      try {
+        const res = await fetch(url, { ...opts, signal: ctrl.signal, headers: { 'Content-Type': 'application/json', ...(opts.headers||{}) } });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+      } finally {
+        clearTimeout(t);
+      }
+    }
+
+    // --- Temperature polling ---
+    let pollTimer = null;
+    async function readTemperature() {
+      try {
+        const data = await fetchJSON(API.temp);
+        if (state.demo) toggleDemo(false);
+        state.celsius = Number(data.temperature);
+        renderTemp();
+        el.updated.textContent = fmtTime(new Date());
+        setStatus('ok', 'Live');
+      } catch (e) {
+        // enter demo mode on first failure
+        if (!state.demo) toggleDemo(true);
+        // simulate a drifting temperature for demo
+        const t = Date.now() / 1000;
+        state.celsius = 23 + Math.sin(t/6) * 1.3 + Math.cos(t/4) * 0.7;
+        renderTemp();
+        el.updated.textContent = fmtTime(new Date());
+        setStatus('err', 'Demo mode (API unreachable)');
+      }
+    }
+
+    function startPolling() {
+      stopPolling();
+      if (state.intervalMs > 0) {
+        pollTimer = setInterval(readTemperature, state.intervalMs);
+      }
+    }
+    function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+    function toggleDemo(on) {
+      state.demo = !!on;
+      el.badge.textContent = on ? 'Demo' : 'Live';
+      el.badge.title = on ? 'Simulated data' : 'API mode';
+    }
+
+    // --- LED ---
+    async function getLED() {
+      try {
+        const data = await fetchJSON(API.led);
+        setLED(!!data.state);
+      } catch (e) {
+        // If API fails, reflect current UI state and keep going
+      }
+    }
+    function setLED(on) {
+      el.ledSwitch.dataset.on = String(!!on);
+      el.ledSwitch.setAttribute('aria-checked', String(!!on));
+      el.ledDot.classList.toggle('on', !!on);
+      el.ledState.textContent = on ? 'On' : 'Off';
+    }
+    async function sendLED(on) {
+      setLED(on); // optimistic
+      try {
+        await fetchJSON(API.led, { method: 'POST', body: JSON.stringify({ state: !!on }) });
+      } catch (e) {
+        // revert on failure
+        setLED(!on);
+      }
+    }
+
+    async function blinkLED() {
+      el.blinkBtn.disabled = true;
+      try { await fetchJSON(API.blink, { method: 'POST', body: JSON.stringify({ times: 3 }) }); }
+      catch (e) {}
+      finally { el.blinkBtn.disabled = false; }
+    }
+
+    // --- Wire up UI ---
+    function applyPrecision(p) {
+      state.precision = Math.max(0, Math.min(6, Number(p)||0));
+      localStorage.setItem('precision', String(state.precision));
+      el.precision.value = String(state.precision);
+      renderTemp();
+    }
+
+    function applyUnit(u) {
+      state.unit = (u === 'F') ? 'F' : 'C';
+      localStorage.setItem('unit', state.unit);
+      el.unitC.classList.toggle('active', state.unit === 'C');
+      el.unitF.classList.toggle('active', state.unit === 'F');
+      el.unitC.setAttribute('aria-pressed', String(state.unit === 'C'));
+      el.unitF.setAttribute('aria-pressed', String(state.unit === 'F'));
+      renderTemp();
+    }
+
+    function applyInterval(ms) {
+      state.intervalMs = Math.max(0, Number(ms)||0);
+      localStorage.setItem('interval', String(state.intervalMs));
+      el.interval.value = String(state.intervalMs);
+      startPolling();
+    }
+
+    // keyboard toggle for accessibility
+    el.ledSwitch.addEventListener('click', () => sendLED(el.ledSwitch.dataset.on !== 'true'));
+    el.ledSwitch.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); sendLED(el.ledSwitch.dataset.on !== 'true'); }
+    });
+
+    el.precision.addEventListener('change', (e) => applyPrecision(e.target.value));
+    el.unitC.addEventListener('click', () => applyUnit('C'));
+    el.unitF.addEventListener('click', () => applyUnit('F'));
+    el.interval.addEventListener('change', (e) => applyInterval(e.target.value));
+    el.refreshBtn.addEventListener('click', readTemperature);
+    el.blinkBtn.addEventListener('click', blinkLED);
+
+    // --- Init ---
+    (function init() {
+      applyPrecision(state.precision);
+      applyUnit(state.unit);
+      applyInterval(state.intervalMs);
+      // prime UI
+      renderTemp();
+      getLED();
+      readTemperature();
+    })();
+  </script>
+</body>
+</html>
+```
+
+The second prompt required the LLM to create a CMSIS based SMT32 SPI driver to interface the DS1722 sensor. I didn't run the code but I can see that the functions it generated and the bit manipulation performed mathces what I had. Especially for initializing and configuring SPI and sending and receiving from SPI.
+
+```C
+#include "stm32l432xx.h"
+#include <stdint.h>
+
+// =========================
+// DS1722 SPI COMMANDS
+// =========================
+#define DS1722_READ_TEMP_MSB  0xAA  // Read MSB temperature register
+#define DS1722_READ_TEMP_LSB  0xA1  // Read LSB temperature register
+
+// =========================
+// PIN & SPI DEFINITIONS
+// =========================
+#define DS1722_SPI            SPI1
+#define DS1722_CS_LOW()       (GPIOA->BSRR = (1U << (4 + 16)))  // PA4 low
+#define DS1722_CS_HIGH()      (GPIOA->BSRR = (1U << 4))         // PA4 high
+
+// =========================
+// SPI1 INITIALIZATION
+// =========================
+void SPI1_Init(void) {
+    // --- Enable peripheral clocks ---
+    RCC->AHB2ENR  |= RCC_AHB2ENR_GPIOAEN;   // Enable GPIOA
+    RCC->APB2ENR  |= RCC_APB2ENR_SPI1EN;    // Enable SPI1
+
+    // --- Configure GPIO pins ---
+    // PA4 = NSS (manual CS)
+    // PA5 = SCK, PA6 = MISO, PA7 = MOSI
+    GPIOA->MODER &= ~((3U << (4*2)) | (3U << (5*2)) | (3U << (6*2)) | (3U << (7*2)));
+    GPIOA->MODER |=  (2U << (5*2)) | (2U << (6*2)) | (2U << (7*2));   // AF mode for SCK/MISO/MOSI
+    GPIOA->AFR[0]  &= ~((0xF << (5*4)) | (0xF << (6*4)) | (0xF << (7*4)));
+    GPIOA->AFR[0]  |=  (5U << (5*4)) | (5U << (6*4)) | (5U << (7*4)); // AF5 = SPI1
+    GPIOA->MODER   |=  (1U << (4*2));                                // PA4 as GPIO output (manual CS)
+    DS1722_CS_HIGH();
+
+    // --- Configure SPI1 ---
+    // Master mode, baud rate = fPCLK/16, CPOL=0, CPHA=0, 8-bit data, software NSS
+    DS1722_SPI->CR1 = SPI_CR1_MSTR | SPI_CR1_SSM | SPI_CR1_SSI | (3U << SPI_CR1_BR_Pos);
+    DS1722_SPI->CR2 = 0; // 8-bit data frame
+    DS1722_SPI->CR1 |= SPI_CR1_SPE; // Enable SPI
+}
+
+// =========================
+// SPI SEND/RECEIVE BYTE
+// =========================
+static uint8_t SPI_TransmitReceive(uint8_t data) {
+    while (!(DS1722_SPI->SR & SPI_SR_TXE));      // Wait until TX buffer empty
+    *((__IO uint8_t *)&DS1722_SPI->DR) = data;   // Send data
+    while (!(DS1722_SPI->SR & SPI_SR_RXNE));     // Wait until RX buffer full
+    return *((__IO uint8_t *)&DS1722_SPI->DR);   // Return received data
+}
+
+// =========================
+// READ TEMPERATURE (°C)
+// =========================
+float DS1722_ReadTemperature(void) {
+    uint8_t msb, lsb;
+    int16_t raw;
+
+    DS1722_CS_LOW();
+
+    // --- Read MSB register ---
+    SPI_TransmitReceive(DS1722_READ_TEMP_MSB);
+    msb = SPI_TransmitReceive(0x00);
+
+    // --- Read LSB register ---
+    SPI_TransmitReceive(DS1722_READ_TEMP_LSB);
+    lsb = SPI_TransmitReceive(0x00);
+
+    DS1722_CS_HIGH();
+
+    // --- Combine MSB & LSB into signed 13-bit value ---
+    raw = ((int16_t)msb << 8) | lsb;
+    raw >>= 3; // right-align 13 bits
+
+    // --- Convert to °C (0.0625 °C per bit) ---
+    return (float)raw * 0.0625f;
+}
+
+// =========================
+// MAIN PROGRAM
+// =========================
+int main(void) {
+    SPI1_Init();
+    float tempC;
+
+    while (1) {
+        tempC = DS1722_ReadTemperature();
+        // Here you can send `tempC` to UART, LCD, or a web server
+        // Example: printf("Temperature: %.2f °C\\r\\n", tempC);
+
+        // Small delay (approx 0.5s at 80 MHz)
+        for (volatile int i = 0; i < 4000000; i++);
+    }
+}
+```
