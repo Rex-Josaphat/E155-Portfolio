@@ -313,13 +313,14 @@ Figure&nbsp;2: Demo Webpage
 <div id="fig-SPITransac" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-SPITransac-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="images/Transaction.png" class="img-fluid figure-img">
+<img src="images/SPITransaction.png" class="img-fluid figure-img">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-SPITransac-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;3: Example SPI Transaction
 </figcaption>
 </figure>
 </div>
+<p>Looking at the bits on the MISO and MOSI lines, we can see that the sensor and the MCU are communicating succesfully. The MOSI line shows <code>80 E6 01 02 00 00</code>: <code>0x80</code> is address of the write configuration register and the following <code>0xE6</code> byte sets the resolution and mode configuring the DS1722 to continous mode and 12-bit temperature resolution. The following <code>0x01</code> and <code>0x02</code> are temperature msb and lsb read commands while the <code>0x00</code> are the dummy bytes that the MCU sends so as to clock data from the temperature sensor. The MISO line shows <code>FF FF FF A0 FF 17</code> which if full of the dummy bytes <code>0xFF</code> and the MSB and LSB data <code>0xA0</code> and <code>0x17</code>. Recalculating this gives me a temperature of <span class="math inline">\(\bf{\approx29.8175^\circ C}\)</span> which is reasonable.</p>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
