@@ -400,10 +400,21 @@ Figure&nbsp;9: Example SPI Transaction on Logic Analyzer
 </figcaption>
 </figure>
 </div>
+<div id="fig-SPI" class="lightbox quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-SPI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="images/trace2.png" class="lightbox" data-gallery="quarto-lightbox-gallery-10" title="Figure&nbsp;10: Zoomed-in Example SPI Transaction on Logic Analyzer"><img src="images/trace2.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-SPI-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10: Zoomed-in Example SPI Transaction on Logic Analyzer
+</figcaption>
+</figure>
+</div>
+<p>The zoomed in transaction shows that the MCU is at the stage of sending the key to the FPGA after which it will set the load signal to begin encryption.</p>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
-<p>This lab took around 18 hours to complete. I lost a lot of time when implementing the key expansion logic because since I was using a split word (4x32) as opposed to the full 128-bit word it meant that my rotation had to apply to the “MSB” word. The standard states you rotate the “first word” but my interpretation of that led me to rotate the “LSB word” which was wrong. The second issue was that I didn’t implement properly the desired delay to help the <code>subBytes()</code> output stabilize therefore I was using wrong data in other blocks, sometimes not even have any data, especially in the first round (round0) and the middle round (round 5). I solved the issue by using a cycle counter, using a register to store intermediate round values. It was amazing to learn the logic and intuition behing the Advanced Encryption Standard.</p>
+<p>This lab took around 20 hours to complete. I lost a lot of time when implementing the key expansion logic because since I was using a split word (4x32) as opposed to the full 128-bit word it meant that my rotation had to apply to the “MSB” word. The standard states you rotate the “first word” but my interpretation of that led me to rotate the “LSB word” which was wrong. The second issue was that I didn’t implement properly the desired delay to help the <code>subBytes()</code> output stabilize therefore I was using wrong data in other blocks, sometimes not even have any data, especially in the first round (round0) and the middle round (round 5). I solved the issue by using a cycle counter, using a register to store intermediate round values. It was amazing to learn the logic and intuition behing the Advanced Encryption Standard.</p>
 </section>
 <section id="ai-prototype-summary" class="level2">
 <h2 class="anchored" data-anchor-id="ai-prototype-summary">AI Prototype Summary</h2>
