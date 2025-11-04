@@ -49,6 +49,10 @@ The modules to enforce the AES encryption and those that control the respective 
 
 ![Hierachical Block Diagram](images/lab7BlockDiagram.png){#fig-blockDiagram .lightbox}
 
+`aes_core()` involves multiple blocks and enabler logic that manages the flow of signals and data through the different transformations within the datapath as shown in @fig-coreBlockDiagram below:
+
+![aes_core() Hierachical Block Diagram](images/coreBlockDiagram.png){#fig-coreBlockDiagram .lightbox}
+
 After running the simulation ensuring modules work as expected, the full setup was installed on the development board. The board has DIP switches that connect specific MCU pins to specific FPGA pins which reduces the need for crossing wires. Other necessary signals like the LEDs were setup on a side breadboard. The complete setup is shown in the following schematic:
 
 ![AES encryption Wiring Setup](images/lab7Schematic.png){#fig-schematic .lightbox}
@@ -57,7 +61,7 @@ After running the simulation ensuring modules work as expected, the full setup w
 
 The testbenches were extremely helpful, especially for this particular lab. I was able to track how my key and other signals move around as I'm performing the key expansion. It allowed me to see how each data signal is loaded as well as when it is updated and it was how I realized the `subBytes()` issue. They were also essential in testing the modules that I had to write for this lab to ensure that the AES transformation modules function as expected. Each testbench was ran using examples from the NIST:197 Examples as well as other random hex values to check with more tests as possible. 
 
-**NB: All testbenches were configured to run multiple trials to test consistency in execution and functionality hence the longer waves. Click on the relevant picture to zoom in on the wave traces.**
+**NB: All testbenches were configured to run multiple trials to test consistency in execution and functionality hence the longer waves. [Click on the relevant picture to zoom in on the wave traces.]{style="color: red"}**
 
 The testbenches for all relevant modules are shown in the figures below:
 
@@ -73,7 +77,7 @@ The testbenches for all relevant modules are shown in the figures below:
 
 ![MCU → FPGA SPI Transaction Simulation](images/aesSPITB.png){#fig-SPI .lightbox}
 
-As shown from all the different tests and cases above, the hardware-accelerated AES logic is valid. To test the hardware, I used the a logic analyzer to visualize the SPI transactions and check the data shared between the MCU and the FPGA. The resulting waves are shown below:
+As shown from all the different tests and cases above, the hardware-accelerated AES logic is valid. To test the hardware, I used the a logic analyzer to visualize the SPI transactions and check the data shared between the MCU and the FPGA. We can see that `load` (D4) is `HIGH` during transfer and goes `LOW` at which point `done` (D5) goes high after encryption and FPGA starts sending data. The resulting waves are shown below:
 
 ![Example SPI Transaction on Logic Analyzer](images/trace1.png){#fig-Test1 .lightbox}
 
@@ -86,6 +90,8 @@ The zoomed in transaction shows that the MCU is at the stage of sending the key 
 This lab took around 23 hours to complete. I lost a lot of time when implementing the key expansion logic because since I was using a split word (4x32) as opposed to the full 128-bit word it meant that my rotation had to apply to the "MSB" word. The standard states you rotate the "first word" but my interpretation of that led me to rotate the "LSB word" which was wrong. The second issue was that I didn't implement properly the desired delay to help the `subBytes()` output stabilize therefore I was using wrong data in other blocks, sometimes not even have any data, especially in the first round (round0) and the middle round (round 5). I solved the issue by using a cycle counter, using a register to store intermediate round values. Finally, I had to fix a synchronization issue betwen the two clock domains (`sck` and `clk`) that would randomize the success of my encryption. Overall, it was amazing to learn the logic and intuition behing the Advanced Encryption Standard.
 
 ## AI Prototype Summary
+The goal of the AI prototype was to see if the AI can create the key expansion code of AES with instructions requesting that specifically or with instructions that give details without explicitly stating AES.
+
 ```Verilog
 // -----------------------------------------------------------------------------
 // AES-128 Key Expansion: single "round step"
