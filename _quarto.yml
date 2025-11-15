@@ -2,6 +2,8 @@ project:
   type: website
   resources: 
     - images/JN_Icon.ico
+    - "*.html"
+    - "/finalProject/**/*.pdf"
 
 website:
   title: "E155 Portfolio"
