@@ -213,11 +213,9 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="fpga-use" class="level2">
 <h2 class="anchored" data-anchor-id="fpga-use">FPGA Use</h2>
-<p>The project uses two FPGAs, one on each side of the communication system. Each FPGA handles AES-128 encryption and decryption while interfacing directly with the mechanical bus. The sender FPGA receives plaintext and encryption key from the MCU, encrypts it, and performs bit-banging to maintain synchronization and ensure that a complete byte is transmitted every cycle. The receiver FPGA reads each incoming byte, decrypts it, and sends the plaintext to the MCU for display. It also manages switch input synchronization through debouncing to ensure clean and reliable signal detection. <strong>The new FPGA functions are highlighted below:</strong></p>
+<p>The project uses two FPGAs, one on each side of the communication system. Each FPGA handles AES-128 encryption and decryption while interfacing directly with the mechanical bus. The sender FPGA receives plaintext and encryption key from the MCU, encrypts it, and performs bit-banging to maintain synchronization and ensure that a complete byte is transmitted every cycle. The receiver FPGA reads each incoming byte, decrypts it, and sends the plaintext to the MCU for display. It also manages switch input synchronization through debouncing to ensure clean and reliable signal detection. <strong>The new FPGA function is highlighted below:</strong></p>
 <ul>
-<li>AES-128 decryption according to the NIST FIPS 197 standard</li>
-<li>Bit-banging/hardware synchronization</li>
-<li>data transfer indicators (Mainly LEDs showing channel status, i.e, HIGH/LOW)</li>
+<li>Using SPRAM to store encrypted ciphertext, and then pulling from the SPRAM 8 bits at a time to transfer via hardware actuation.</li>
 </ul>
 <p>The FPGAs communicate with the MCUs through SPI and interface with the mechanical bus using a custom serial bit driver that handles all data transmission and input reception. The transfer rate of the bits will be set depending on how we synchonize the receiving end. Bit transfer is handled by the clock, and we can change the clock speed to achieve synchronization, and this will in turn affect how fast we can send bits across.</p>
 <section id="fpga-resource-usage" class="level3">
@@ -227,20 +225,9 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="mcu-use" class="level2">
 <h2 class="anchored" data-anchor-id="mcu-use">MCU Use</h2>
-<p>The project uses two MCUs, one for each side of the system. They serve as the main interface for web communication and text encoding, converting messages into byte data that the FPGA can process. MCUs are ideal for this role due to their large on-board memory, which allows them to handle larger text data. Each MCU also participates in the encryption and decryption process, managing the exchange of keys and ciphertext/plaintext with the FPGAs. Additionally, the MCUs will control all system indicators and feedback mechanisms that help monitor the efficiency of the system. <strong>The new MCU functions are shown below:</strong></p>
+<p>The project uses two MCUs, one for each side of the system. They serve as the main interface for web communication and text encoding, converting messages into byte data that the FPGA can process. MCUs are ideal for this role due to their large on-board memory, which allows them to handle larger text data. Each MCU also participates in the encryption and decryption process, managing the exchange of keys and ciphertext/plaintext with the FPGAs. Additionally, the MCUs will control all system indicators and feedback mechanisms that help monitor the efficiency of the system. <strong>The new MCU function is shown below:</strong></p>
 <ul>
-<li>ASCII encoding/decoding</li>
-<li>Feedback &amp; Monitoring:
-<ul>
-<li>Validate if data received matches the intended message (transferred message)</li>
-<li>Track clock (clk) speed as well as data transfer speed.</li>
-<li>Determine progress of data transfer</li>
-</ul></li>
-<li>Fault report and handling:
-<ul>
-<li>stop transfer and report when received data ≠ sent data</li>
-<li>System kill switch (master stop)</li>
-</ul></li>
+<li>Using the TRNG to randomly generate keys for encryption. We will send these random keys to the receiver via SPI so that it can decrypt the message correctly.</li>
 </ul>
 </section>
 <section id="bill-of-materials" class="level2">
@@ -263,7 +250,7 @@ ul.task-list li input[type="checkbox"] {
 <td>SRD-12VDC-SL-C</td>
 <td>10</td>
 <td>AEDIKO</td>
-<td>13.16</td>
+<td>13.20</td>
 <td><a href="https://www.amazon.com/dp/B0972R8QZS/ref=twister_B0B8HF14T2?_encoding=UTF8&amp;th=1">Link</a></td>
 </tr>
 <tr class="even">
@@ -271,7 +258,7 @@ ul.task-list li input[type="checkbox"] {
 <td>Z24G50031OJX</td>
 <td>9</td>
 <td>TEHAUX</td>
-<td>36.54</td>
+<td>28.26</td>
 <td><a href="https://www.amazon.com/dp/B0BRYJS7HD?psc=1&amp;ref_=cm_sw_r_cp_ud_ct_1PBFRK1N28CPX9EH90QX_1">Link</a></td>
 </tr>
 <tr class="odd">
@@ -279,10 +266,18 @@ ul.task-list li input[type="checkbox"] {
 <td>KW12-3</td>
 <td>10</td>
 <td>HiLetgo</td>
-<td>6.57</td>
+<td>6.60</td>
 <td><a href="https://www.amazon.com/dp/B07X142VGC?psc=1&amp;ref_=cm_sw_r_cp_ud_ct_1PBFRK1N28CPX9EH90QX_2">Link</a></td>
 </tr>
 <tr class="even">
+<td>LCD Display with I2C Adapter</td>
+<td>LCD2004</td>
+<td>10</td>
+<td>SunFounder</td>
+<td>14.26</td>
+<td><a href="https://www.amazon.com/dp/B01GPUMP9C?ref=cm_sw_r_cso_cp_apan_dp_T1BWWY2K3NTRHKGR1M92&amp;ref_=cm_sw_r_cso_cp_apan_dp_T1BWWY2K3NTRHKGR1M92&amp;social_share=cm_sw_r_cso_cp_apan_dp_T1BWWY2K3NTRHKGR1M92&amp;titleSource=true&amp;th=1">Link</a></td>
+</tr>
+<tr class="odd">
 <td>FPGA</td>
 <td>Upduino v3.1</td>
 <td>2</td>
@@ -290,7 +285,7 @@ ul.task-list li input[type="checkbox"] {
 <td>Stockroom</td>
 <td>N/A</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>MCU</td>
 <td>STM32L432KC</td>
 <td>2</td>
@@ -298,7 +293,7 @@ ul.task-list li input[type="checkbox"] {
 <td>Stockroom</td>
 <td>N/A</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Metal Rods</td>
 <td>N/A</td>
 <td>9</td>
@@ -306,7 +301,7 @@ ul.task-list li input[type="checkbox"] {
 <td>Stockroom</td>
 <td>N/A</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>ESP8266</td>
 <td>ESP-WROOM-02</td>
 <td>2</td>
@@ -314,12 +309,12 @@ ul.task-list li input[type="checkbox"] {
 <td>Stockroom</td>
 <td>N/A</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>Total</strong></td>
 <td></td>
 <td></td>
 <td></td>
-<td><strong>$56.27</strong></td>
+<td><strong>$62.32</strong></td>
 <td></td>
 </tr>
 </tbody>
@@ -329,29 +324,31 @@ ul.task-list li input[type="checkbox"] {
 <h2 class="anchored" data-anchor-id="project-performance-specs">Project Performance Specs</h2>
 <p>We expect the toughest stage to be the mechanical bus. Synchronizing all actuators and making sure that the receiver samples at the correct time will be the biggest challenge. Since the clock is also mechanical, the whole system is susceptible to any faults from that channel. Below are the main performance specs and secondary specs to check-off to verify the process and completeness of the project:</p>
 <ul>
-<li><strong>Main performance spec:</strong>
-<ul>
-<li><label><input type="checkbox">Send 16 characters/letters maximum</label></li>
-<li>[ ]</li>
-</ul></li>
-<li><strong>Secondary performace specs:</strong>
+<li><strong>Main Performance Specs:</strong>
 <ul class="task-list">
+<li><label><input type="checkbox">Send 16 ASCII characters</label></li>
+<li><label><input type="checkbox">Send multiple blocks of messages in 128 bit blocks</label></li>
+<li><label><input type="checkbox">Hardware actuation system functions correctly</label></li>
+<li><label><input type="checkbox">Website UI correctly takes in user input and correctly displays output message for receiver</label></li>
+<li><label><input type="checkbox">Status and progress LCD respond as expected</label></li>
+<li><label><input type="checkbox">TRNG generates random key</label></li>
+<li><label><input type="checkbox">Random key is transmited to receiver over SPI backhaul</label></li>
+<li><label><input type="checkbox">SPRAM correctly stores multiple 128 bit ciphertext blocks</label></li>
+<li><label><input type="checkbox">FPGA pulls data from SPRAM 8 bits at a time to be sent over mechanical actuation system</label></li>
 <li><label><input type="checkbox">Text messages are correctly sent/received between the ESP8266 to the MCU</label></li>
 <li><label><input type="checkbox">MCU correctly encodes &amp; decodes the received word in ASCII</label></li>
 <li><label><input type="checkbox">MCU-FPGA encryption/decryption modules communicate and perform as expected</label></li>
 <li><label><input type="checkbox">9 mechanical channels properly synchronized between the two sides.</label></li>
-<li><label><input type="checkbox">Status and progress LEDs respond as expected</label></li>
 <li><label><input type="checkbox">System stops immediately if received data is different from sent data.</label></li>
 <li><label><input type="checkbox">All 8 data buses are read synchronously</label></li>
-<li><label><input type="checkbox">Able to receive &amp; display at least 3 letters in a second i.e minimum 24bps transfer speed<br>
-</label></li>
+<li><label><input type="checkbox">Able to receive &amp; display at least 3 letters in a second i.e minimum 24bps transfer speed</label></li>
 </ul></li>
-<li><strong>Strech performance specs:</strong>
+<li><strong>Project Midpoint Demo Specs:</strong> At Minimum, the following must be completed:
 <ul class="task-list">
-<li><label><input type="checkbox">Able to send multiple words over</label></li>
-<li><label><input type="checkbox">Able to send words from a .txt file uploaded from the web app</label></li>
-<li><label><input type="checkbox">Faster transfer speeds (around 8 letters in a second, 64bps)</label></li>
-<li><label><input type="checkbox">Emoji handling</label></li>
+<li><label><input type="checkbox">Hardware actuation system functions as expected</label></li>
+<li><label><input type="checkbox">ESP8266 Website UI functions and can take in user messages and display output messages</label></li>
+<li><label><input type="checkbox">LCD Display displays text</label></li>
+<li><label><input type="checkbox">RTL &amp; Code has made progress</label></li>
 </ul></li>
 </ul>
 </section>
@@ -381,24 +378,35 @@ Figure&nbsp;1: Main Block Diagram.
 </figcaption>
 </figure>
 </div>
-<p>The actuation block requires different modules and setup necessary for it to work as expected. The relay module specifications show the mentioned NO and NC connection modes. <a href="#fig-actBlock" class="quarto-xref">Figure&nbsp;2</a> below shows the signals as well as voltage and circuit configurations:</p>
+<p>Below is also a flowchart of how messages go from the user to receiver through our project in <a href="#fig-message" class="quarto-xref">Figure&nbsp;2</a>:</p>
+<div id="fig-message" class="lightbox quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-message-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="docs/message.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;2: Message Flowchart"><img src="docs/message.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-message-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Message Flowchart
+</figcaption>
+</figure>
+</div>
+<p>The actuation block requires different modules and setup necessary for it to work as expected. The relay module specifications show the mentioned NO and NC connection modes. <a href="#fig-actBlock" class="quarto-xref">Figure&nbsp;3</a> below shows the signals as well as voltage and circuit configurations:</p>
 <div id="fig-actBlock" class="lightbox quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-actBlock-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="docs/actuationBlock.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;2: Hardware Actuation Block Diagram"><img src="docs/actuationBlock.png" class="img-fluid figure-img"></a>
+<a href="docs/actuationBlock.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;3: Hardware Actuation Block Diagram"><img src="docs/actuationBlock.png" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-actBlock-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Hardware Actuation Block Diagram
+Figure&nbsp;3: Hardware Actuation Block Diagram
 </figcaption>
 </figure>
 </div>
 <div id="fig-actDiagram" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-actDiagram-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="docs/actuationCircuit.png" class="img-fluid figure-img">
+<img src="docs/actuationCircuit.jpg" class="img-fluid figure-img">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-actDiagram-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Hardware Actuation 3D Visualization
+Figure&nbsp;4: Hardware Actuation 3D Visualization
 </figcaption>
 </figure>
 </div>
@@ -409,7 +417,7 @@ Figure&nbsp;3: Hardware Actuation 3D Visualization
 <img src="docs/contingency.png" class="img-fluid figure-img">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-fallback-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: Fallback Plan
+Figure&nbsp;5: Fallback Plan
 </figcaption>
 </figure>
 </div>
