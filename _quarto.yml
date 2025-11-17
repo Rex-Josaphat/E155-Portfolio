@@ -36,7 +36,8 @@ website:
         menu: 
           - text: Project Proposal
             href: finalProject/proposal.qmd     
-
+          - text: Midpoint Report
+            href: finalProject/midpoint.qmd     
       - href: https://hmc-e155.github.io/
         text: Resources
       
