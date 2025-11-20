@@ -16,7 +16,7 @@ The work for the past days has been divided as follows:
 
 - **Josaphat Ngoga** worked on FPGA tasks, including encryption/decryption, SPRAM read/write, message sending, bridge module, and FPGA modules to handle SPI communications, as well as relevant MCU drivers where this crosstalk is implemented. Also responsible for setting up various mechanical components.
 
-We worked together in setting up all hardware: Relay and solenoid blocks for the actuation system, as well as LCD and ESP32866 wiring.
+We worked together in setting up all hardware: Relay and solenoid blocks for the actuation system, as well as LCD and ESP8266 wiring.
 
 ## Progress Summary
 
@@ -44,9 +44,8 @@ On the **receiver side**, we have the following modules:
 
 - **msgReceive():** Receiving module to be used in case the MCU proves tough to receive the bytes from the actuators. Receives the byte blocks following the tx_clk defined by the sender and reconstructs the full ciphertext for decryption.
 
-All of these modules have been tested with respective testbenches to validate functionality and are combined into the **receiver()** top module and interact as shown in the block diagram below:
+All of these modules have been tested with respective testbenches to validate functionality and are combined into the **receiver()** top module.
 
-![Receiver Module Block Diagram](docs/midpoint/receiverTop.png){#fig-receiverBlockD .lightbox}
 
 ### MCU Tasks and Drivers
 On the **sender side**, we have the following drivers:
@@ -59,15 +58,17 @@ Below is a demo result of what the sender website looks like with example input:
 
 - **trng.c:** This file initializes TRNG and reads the randomly generated bits from it. 
 
+![Key Generation by TRNG](docs/midpoint/keys.png){#fig-keyGen width=50% .lightbox}
+
 - **main.c:** This file sets up our clock and peripherals and calls upon the functions in webpage.c to execute the webpage. 
 
-Below is a sample SPI transaction:
+Below is a sample SPI transaction from the MCU to the FPGA once the MCU receives the user message from ESP8226 via USART:
 
-![Caption Logic Analyzer Trace of...](docs/midpoint/trace1.png){#fig-trace1 .lightbox}
+![Full SPI Transaction of Plaintext and Key](docs/midpoint/trace1.png){#fig-trace1 .lightbox}
 
-![Caption Logic Analyzer Trace of...](docs/midpoint/trace2.png){#fig-trace2 .lightbox}
+![Logic Analyzer Trace of First Few Characters of Plaintext](docs/midpoint/trace2.png){#fig-trace2 .lightbox}
 
-![Caption Logic Analyzer Trace of...](docs/midpoint/trace3.png){#fig-trace3 .lightbox}
+![Logic Analyzer Confirming SPI Transaction of The TRNG Generated Key](docs/midpoint/trace3.png){#fig-trace3 .lightbox}
 
 On the **receiver side**, we have the following drivers:
 
@@ -80,6 +81,8 @@ Below is a demo result of what the receiver end website looks like with example 
 - **lcd_i2c.c:** This file writes functions to control different aspects of the LCD, like displaying text and the way the text is displayed. This is a file that was converted from C++ to C, as the vendor of the LCD provided sample Arduino files. 
 
 - **STM32L432KC_I2C.c:** This file enables I2C1 functionality between our MCU and LCD on PA9 and PA10.
+
+- **msgReceive.c:** This file reads 8 bytes based on states from the limit switches, and concatenates the full 16byte message sent in the end. It uses a hardware Interrupt configured where the pin receiving the transfer clock implements a rising trigger 
 
 - **main.c:** This file sets up our clock, peripherals, and calls upon functions in the above files to display the webpage, display on the LCD, and communicate with the FPGA. 
 
@@ -110,7 +113,15 @@ All these components are fixed in the block. The relay block has a dedicated mas
 
 The assembly of the LCD required a level shifter to boost voltages into the required range as shown below:
 
-![Level Shifter and ESP32 Schematic](docs/midpoint/levelShifter.png){#fig-shifter .lightbox}
+![Level Shifter and ESP8266 Schematic](docs/midpoint/levelShifter.png){#fig-shifter .lightbox}
+
+## High Level Block Diagram
+
+![High Level Block Diagram](docs/midpoint/blockDiagram.png){#fig-sysDiagram .lightbox}
+
+## High Level Data Flow Diagram
+
+![High Level Data Flow Diagram](docs/midpoint/data.png){#fig-message .lightbox}
 
 ## Main Performance Specs:
 - [ ] Send 16 ASCII characters
