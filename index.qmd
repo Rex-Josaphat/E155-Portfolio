@@ -14,4 +14,4 @@ about:
         target: _blank
 ---
 
-Hi! I’m Josaphat Ngoga, a senior Engineering major at Harvey Mudd College. My interests span both Mechanical and Electrical engineering, with a focus on mechanical design, electronics, and hardware systems. I enjoy working on projects that bring these areas together—especially those involving FPGA development and microcontroller-based applications. You can find more about my interests, skills, and projects at [jngoga.vercel.app](https://jngoga.vercel.app/)
+Josaphat Ngoga is a senior Engineering major at Harvey Mudd College. His interests span both Mechanical and Electrical engineering, with a focus and experience in mechanical design, electronics, control systems and hardware systems. He enjoys working on projects that bring these areas together, especially those involving mechanical systems, FPGA development, embedded systems and circuit design. During his internships at UL Solutions, he also gained experience in DSP and RF/Wireless systems. You can find more about his interests, skills, and projects at [jngoga.vercel.app](https://jngoga.vercel.app/)
